@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="BtManage.Views.BatteryMeter"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Height="4"
+    HorizontalAlignment="Stretch"
+    IsTabStop="False">
+    <!-- Ten segments: earbuds report their charge in steps of 10 %. -->
+    <Grid x:Name="Root">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup x:Name="LevelStates">
+                <VisualState x:Name="Normal" />
+                <VisualState x:Name="Low">
+                    <VisualState.Setters>
+                        <Setter Target="Filled.Fill" Value="{ThemeResource SystemFillColorCriticalBrush}" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <Path x:Name="Track" Fill="{ThemeResource ControlStrongFillColorDisabledBrush}" />
+        <Path x:Name="Filled" Fill="{ThemeResource AccentFillColorDefaultBrush}" />
+    </Grid>
+</UserControl>

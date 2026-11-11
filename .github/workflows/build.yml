@@ -1,0 +1,100 @@
+name: Build
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      core_ref:
+        description: Branch, tag or commit of btManage-core to build against (default branch if empty)
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build:
+    name: Windows ${{ matrix.arch }}
+    # btManage-core is private. Pull requests from forks do not get its token, so they are skipped.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x64
+            platform: x64
+            rid: win-x64
+            rust_target: x86_64-pc-windows-msvc
+          - arch: arm64
+            platform: ARM64
+            rid: win-arm64
+            rust_target: aarch64-pc-windows-msvc
+    env:
+      HAS_CORE_TOKEN: ${{ secrets.CORE_REPO_TOKEN != '' }}
+    steps:
+      - name: Require the core token
+        if: env.HAS_CORE_TOKEN != 'true'
+        shell: bash
+        run: |
+          echo "::error::Secret CORE_REPO_TOKEN is not set. Add a fine-grained token with read access to the contents of btManage-core (Settings, Secrets and variables, Actions)."
+          exit 1
+
+      # The two repositories sit side by side, as on a developer machine.
+      - uses: actions/checkout@v7
+        with:
+          path: btManage-windows
+
+      - name: Check out the core
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ github.repository_owner }}/btManage-core
+          ref: ${{ inputs.core_ref }}
+          token: ${{ secrets.CORE_REPO_TOKEN }}
+          path: btManage-core
+
+      - name: Record the core revision
+        shell: bash
+        run: echo "Built against btManage-core \`$(git -C btManage-core rev-parse HEAD)\`" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install Rust
+        shell: bash
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup target add ${{ matrix.rust_target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: btManage-core
+          key: ${{ matrix.rust_target }}
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      # Builds the Rust core too: see build/RustCore.targets.
+      - name: Publish
+        run: >
+          dotnet publish btManage-windows/src/BtManage/BtManage.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          -p:Platform=${{ matrix.platform }}
+          -o publish
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: btManage-windows-${{ matrix.arch }}
+          path: publish
+          if-no-files-found: error

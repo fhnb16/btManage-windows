@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="BtManage.Views.BatteryCell"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="using:BtManage.Views"
+    IsTabStop="False">
+    <UserControl.Resources>
+        <Style x:Key="Outline" TargetType="Path">
+            <Setter Property="Stroke" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            <Setter Property="StrokeThickness" Value="1.5" />
+            <Setter Property="StrokeLineJoin" Value="Round" />
+            <Setter Property="StrokeStartLineCap" Value="Round" />
+            <Setter Property="StrokeEndLineCap" Value="Round" />
+            <Setter Property="Visibility" Value="Collapsed" />
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel Spacing="8">
+        <!-- Outlines on a 32 px grid. The right earbud is the left one mirrored. -->
+        <Grid Width="32" Height="32" HorizontalAlignment="Left">
+            <Path x:Name="LeftOutline" Style="{StaticResource Outline}"
+                  Data="M 20,11 L 20,24 A 3,3 0 0 1 14,24 L 14,17.93 A 7,7 0 1 1 20,11 Z" />
+            <Path x:Name="RightOutline" Style="{StaticResource Outline}"
+                  Data="M 12,11 L 12,24 A 3,3 0 0 0 18,24 L 18,17.93 A 7,7 0 1 0 12,11 Z" />
+            <Path x:Name="CaseOutline" Style="{StaticResource Outline}"
+                  Data="M 11,6 H 21 A 6,6 0 0 1 27,12 V 20 A 6,6 0 0 1 21,26 H 11 A 6,6 0 0 1 5,20 V 12 A 6,6 0 0 1 11,6 Z M 5,13 H 27 M 15,18 A 1,1 0 1 0 17,18 A 1,1 0 1 0 15,18 Z" />
+            <Path x:Name="MainOutline" Style="{StaticResource Outline}"
+                  Data="M 7,18 V 15 A 9,9 0 0 1 25,15 V 18 M 6.5,18 H 7.5 A 2.5,2.5 0 0 1 10,20.5 V 24.5 A 2.5,2.5 0 0 1 7.5,27 H 6.5 A 2.5,2.5 0 0 1 4,24.5 V 20.5 A 2.5,2.5 0 0 1 6.5,18 Z M 24.5,18 H 25.5 A 2.5,2.5 0 0 1 28,20.5 V 24.5 A 2.5,2.5 0 0 1 25.5,27 H 24.5 A 2.5,2.5 0 0 1 22,24.5 V 20.5 A 2.5,2.5 0 0 1 24.5,18 Z" />
+        </Grid>
+
+        <TextBlock x:Name="PercentText"
+                   FontSize="28"
+                   LineHeight="36"
+                   Typography.NumeralAlignment="Tabular" />
+
+        <views:BatteryMeter x:Name="Meter" />
+
+        <StackPanel Orientation="Horizontal" Spacing="4">
+            <TextBlock x:Name="LabelText"
+                       Style="{StaticResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <FontIcon x:Name="ChargingIcon"
+                      Glyph="&#xE945;"
+                      FontSize="12"
+                      Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                      VerticalAlignment="Center"
+                      Visibility="Collapsed" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

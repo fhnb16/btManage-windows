@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppName" xml:space="preserve">
+    <value>btManage</value>
+  </data>
+  <data name="UnknownModel" xml:space="preserve">
+    <value>Наушники Apple</value>
+  </data>
+  <data name="CellLeft" xml:space="preserve">
+    <value>Левый</value>
+  </data>
+  <data name="CellRight" xml:space="preserve">
+    <value>Правый</value>
+  </data>
+  <data name="CellCase" xml:space="preserve">
+    <value>Кейс</value>
+  </data>
+  <data name="CellMain" xml:space="preserve">
+    <value>Заряд</value>
+  </data>
+  <data name="InEar" xml:space="preserve">
+    <value>в ухе</value>
+  </data>
+  <data name="Charging" xml:space="preserve">
+    <value>заряжается</value>
+  </data>
+  <data name="PercentFormat" xml:space="preserve">
+    <value>{0} %</value>
+    <comment>{0} — целое число от 0 до 100; перед знаком процента неразрывный пробел</comment>
+  </data>
+  <data name="UpdatedUnderMinute" xml:space="preserve">
+    <value>Обновлено меньше минуты назад</value>
+  </data>
+  <data name="UpdatedMinutes" xml:space="preserve">
+    <value>Обновлено {0} мин назад</value>
+    <comment>{0} — число минут, от 1</comment>
+  </data>
+  <data name="EmptyTitle" xml:space="preserve">
+    <value>Наушников рядом нет</value>
+  </data>
+  <data name="EmptyHint" xml:space="preserve">
+    <value>Откройте кейс или наденьте наушники рядом с компьютером</value>
+  </data>
+  <data name="BluetoothOffTitle" xml:space="preserve">
+    <value>Bluetooth выключен</value>
+  </data>
+  <data name="BluetoothOffHint" xml:space="preserve">
+    <value>Включите Bluetooth, чтобы видеть заряд</value>
+  </data>
+  <data name="BluetoothSettings" xml:space="preserve">
+    <value>Параметры Bluetooth</value>
+  </data>
+  <data name="MenuExit" xml:space="preserve">
+    <value>Выход</value>
+  </data>
+  <data name="ToastLow" xml:space="preserve">
+    <value>Низкий заряд: {0}</value>
+    <comment>{0} — список разряженных батарей, например «Левый 20 %, Кейс 10 %»</comment>
+  </data>
+</root>

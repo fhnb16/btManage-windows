@@ -1,0 +1,28 @@
+<Project>
+  <!--
+    Builds the Rust core (btmanage-ffi) for the platform being built and ships
+    btmanage_ffi.dll next to the executable.
+
+    BtmCoreDir       path to the btManage-core checkout; by default a sibling of this repository
+    BtmSkipRustBuild set to true to use an already built library
+  -->
+  <PropertyGroup>
+    <BtmCoreDir Condition="'$(BtmCoreDir)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', '..', 'btManage-core'))</BtmCoreDir>
+    <BtmCoreDir>$([MSBuild]::EnsureTrailingSlash('$(BtmCoreDir)'))</BtmCoreDir>
+    <BtmRustTarget Condition="'$(Platform)' == 'ARM64'">aarch64-pc-windows-msvc</BtmRustTarget>
+    <BtmRustTarget Condition="'$(BtmRustTarget)' == ''">x86_64-pc-windows-msvc</BtmRustTarget>
+    <BtmNativeLibrary>$(BtmCoreDir)target\$(BtmRustTarget)\release\btmanage_ffi.dll</BtmNativeLibrary>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(BtmNativeLibrary)" Link="btmanage_ffi.dll" Visible="false"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <Target Name="BuildRustCore" BeforeTargets="BeforeBuild" Condition="'$(BtmSkipRustBuild)' != 'true'">
+    <Error Condition="!Exists('$(BtmCoreDir)Cargo.toml')"
+           Text="btManage-core was not found at $(BtmCoreDir). Clone it next to this repository or pass -p:BtmCoreDir=&lt;path&gt;." />
+    <Exec Command="cargo build --release --locked -p btmanage-ffi --target $(BtmRustTarget)"
+          WorkingDirectory="$(BtmCoreDir)" />
+  </Target>
+</Project>
