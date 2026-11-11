@@ -49,7 +49,10 @@ internal sealed class Updater
         .FirstOrDefault(attribute => attribute.Key == "UpdateRepository")?.Value ?? string.Empty;
 
     public static string CurrentVersion { get; } =
-        typeof(Updater).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
+        typeof(Updater).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+            .InformationalVersion.Split('+')[0]
+        ?? typeof(Updater).Assembly.GetName().Version?.ToString(3)
+        ?? "0.0.0";
 
     /// <summary>Published as one self-extracting executable rather than a folder of files.</summary>
     private static bool IsSingleFile => string.IsNullOrEmpty(typeof(Updater).Assembly.Location);

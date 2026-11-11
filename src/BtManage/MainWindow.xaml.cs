@@ -529,7 +529,7 @@ public sealed partial class MainWindow : Window
         });
 
         Section("SettingsAbout");
-        var version = typeof(MainWindow).Assembly.GetName().Version?.ToString(3) ?? string.Empty;
+        var version = Updater.CurrentVersion;
         SettingsPanel.Children.Add(new TextBlock
         {
             Text = Strings.Format("AboutVersion", version, Interop.Hub.CoreVersion),

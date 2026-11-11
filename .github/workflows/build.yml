@@ -1,8 +1,8 @@
 name: Build
 
 # Every push and pull request builds the application and keeps the result as artifacts.
-# A tag "v1.2.3" also publishes a release with that version: the files appear under
-# Releases, and the application's updater picks them up from there.
+# Pushes to main/master publish a release using the project version, with a numeric suffix
+# when that version has already been used. Pushing a "v1.2.3" tag also publishes a release.
 
 on:
   push:
@@ -19,20 +19,83 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 env:
   CARGO_TERM_COLOR: always
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
 
 jobs:
+  prepare:
+    name: Prepare version
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: btManage-windows
+
+      - name: Choose and reserve the version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          elif [[ "$GITHUB_EVENT_NAME" == push && "$GITHUB_REF" == refs/heads/* ]]; then
+            base_version="$(sed -n 's/.*<Version>\([^<]*\)<\/Version>.*/\1/p' btManage-windows/src/BtManage/BtManage.csproj | head -n 1)"
+            if [[ -z "$base_version" ]]; then
+              echo "::error::Could not read the base version from BtManage.csproj."
+              exit 1
+            fi
+
+            tags="$(gh api --paginate "repos/$GH_REPO/tags?per_page=100" --jq '.[].name')"
+            suffix=0
+            while :; do
+              if (( suffix == 0 )); then
+                version="$base_version"
+              else
+                version="$base_version.$suffix"
+              fi
+              tag="v$version"
+
+              if grep -Fqx "$tag" <<< "$tags"; then
+                suffix=$((suffix + 1))
+                continue
+              fi
+
+              if output="$(gh api --method POST "repos/$GH_REPO/git/refs" \
+                -f "ref=refs/tags/$tag" -f "sha=$GITHUB_SHA" 2>&1)"; then
+                break
+              elif [[ "$output" == *"Reference already exists"* ]]; then
+                tags+=$'\n'"$tag"
+                suffix=$((suffix + 1))
+              else
+                echo "$output" >&2
+                exit 1
+              fi
+            done
+          else
+            version="0.0.${GITHUB_RUN_NUMBER}"
+          fi
+
+          if [[ ! "$version" =~ ^[0-9]+(\.[0-9]+){2,3}$ ]]; then
+            echo "::error::Release version '$version' must contain three or four numeric components."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Release version: $version" >> "$GITHUB_STEP_SUMMARY"
+
   build:
     name: Windows ${{ matrix.arch }}
     # btManage-core is private. Pull requests from forks do not get its token, so they are skipped.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    needs: prepare
     runs-on: windows-latest
     strategy:
       fail-fast: false
@@ -70,19 +133,14 @@ jobs:
           token: ${{ secrets.CORE_REPO_TOKEN }}
           path: btManage-core
 
-      # A tag v1.2.3 gives version 1.2.3. Other builds get 0.0.<run number>, which every
-      # release is newer than.
       - name: Work out the version
         id: version
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
         shell: bash
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            version="${GITHUB_REF_NAME#v}"
-          else
-            version="0.0.${GITHUB_RUN_NUMBER}"
-          fi
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "Version $version, built against btManage-core \`$(git -C btManage-core rev-parse HEAD)\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version $VERSION, built against btManage-core \`$(git -C btManage-core rev-parse HEAD)\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Install Rust
         shell: bash
@@ -157,8 +215,8 @@ jobs:
 
   release:
     name: Release
-    if: startsWith(github.ref, 'refs/tags/v')
-    needs: build
+    if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+    needs: [prepare, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -172,7 +230,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
-            || gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
-          gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          tag="v$VERSION"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" dist/* --clobber
+          else
+            gh release create "$tag" dist/* --target "$GITHUB_SHA" --title "$tag" --generate-notes
+          fi
