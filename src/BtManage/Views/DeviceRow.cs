@@ -54,7 +54,8 @@ internal static class DeviceRow
         Grid.SetColumn(level, 2);
         row.Children.Add(level);
 
-        AutomationProperties.SetName(row, $"{DeviceText.Name(device)}, {DeviceText.Status(device)}, {DeviceText.Levels(device)}");
+        string[] spoken = [DeviceText.Name(device), DeviceText.Status(device), DeviceText.Levels(device)];
+        AutomationProperties.SetName(row, string.Join(", ", spoken.Where(part => part.Length > 0)));
         return row;
     }
 

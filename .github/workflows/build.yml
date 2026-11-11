@@ -111,6 +111,7 @@ jobs:
             rust_target: aarch64-pc-windows-msvc
     env:
       HAS_CORE_TOKEN: ${{ secrets.CORE_REPO_TOKEN != '' }}
+      HAS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE_BASE64 != '' }}
       NAME: btManage-windows-${{ matrix.arch }}
     steps:
       - name: Require the core token
@@ -182,6 +183,29 @@ jobs:
           -p:EnableCompressionInSingleFile=true
           -o publish/single
 
+      # Code signing, for when there is a certificate. Put the .pfx into the secret
+      # WINDOWS_CERTIFICATE_BASE64 (base64 text) and its password into
+      # WINDOWS_CERTIFICATE_PASSWORD; without them these steps are skipped and the files
+      # stay unsigned.
+      - name: Restore the signing certificate
+        if: env.HAS_CERTIFICATE == 'true'
+        shell: pwsh
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}
+        run: |
+          [IO.File]::WriteAllBytes("$env:RUNNER_TEMP\signing.pfx", [Convert]::FromBase64String($env:CERTIFICATE_BASE64))
+          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin\*\x64\signtool.exe" | Sort-Object FullName | Select-Object -Last 1 -ExpandProperty FullName
+          "SIGNTOOL=$signtool" >> $env:GITHUB_ENV
+
+      - name: Sign the application
+        if: env.HAS_CERTIFICATE == 'true'
+        shell: pwsh
+        env:
+          CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          $files = @('publish/folder/BtManage.exe', 'publish/folder/BtManage.dll', 'publish/folder/btmanage_ffi.dll', 'publish/single/BtManage.exe')
+          & $env:SIGNTOOL sign /f "$env:RUNNER_TEMP\signing.pfx" /p "$env:CERTIFICATE_PASSWORD" /fd sha256 /tr http://timestamp.digicert.com /td sha256 $files
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       # The names are part of the contract with the updater: it looks for
       # "windows-<arch>.zip" or "windows-<arch>-portable.exe" among the release files.
       - name: Package
@@ -207,6 +231,17 @@ jobs:
             "/DSourceDir=$PWD\publish\folder" "/DOutputDir=$PWD\dist" btManage-windows\installer\btManage.iss
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: Sign the installer
+        if: env.HAS_CERTIFICATE == 'true'
+        shell: pwsh
+        env:
+          CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+        run: |
+          $setup = Get-ChildItem dist/*-setup.exe -ErrorAction SilentlyContinue
+          if ($setup) {
+            & $env:SIGNTOOL sign /f "$env:RUNNER_TEMP\signing.pfx" /p "$env:CERTIFICATE_PASSWORD" /fd sha256 /tr http://timestamp.digicert.com /td sha256 $setup.FullName
+          }
+          Remove-Item "$env:RUNNER_TEMP\signing.pfx" -ErrorAction SilentlyContinue
       - uses: actions/upload-artifact@v7
         with:
           name: btManage-windows-${{ matrix.arch }}
