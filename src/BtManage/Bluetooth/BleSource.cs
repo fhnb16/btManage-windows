@@ -1,12 +1,18 @@
 using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Devices.Bluetooth;
+using BtManage.Interop;
 using Windows.Devices.Bluetooth.Advertisement;
 
 namespace BtManage.Bluetooth;
 
-/// <summary>Listens for Bluetooth LE advertisements and passes manufacturer data to the monitor.</summary>
+/// <summary>
+/// Listens for Bluetooth LE advertisements and passes manufacturer data and 16-bit service
+/// data to the monitor. That is where earbuds put the levels of each bud and the case.
+/// </summary>
 internal sealed class BleSource : IDisposable
 {
+    /// <summary>Advertising data type "Service Data - 16-bit UUID".</summary>
+    private const byte ServiceData16 = 0x16;
+
     private readonly DeviceMonitor _monitor;
     private readonly BluetoothLEAdvertisementWatcher _watcher;
 
@@ -16,7 +22,6 @@ internal sealed class BleSource : IDisposable
         // Passive: the levels are in the advertisement itself, no scan request is needed.
         _watcher = new BluetoothLEAdvertisementWatcher { ScanningMode = BluetoothLEScanningMode.Passive };
         _watcher.Received += OnReceived;
-        _watcher.Stopped += OnStopped;
         _monitor.Tick += EnsureRunning;
         EnsureRunning();
     }
@@ -25,7 +30,6 @@ internal sealed class BleSource : IDisposable
     {
         _monitor.Tick -= EnsureRunning;
         _watcher.Received -= OnReceived;
-        _watcher.Stopped -= OnStopped;
         if (_watcher.Status == BluetoothLEAdvertisementWatcherStatus.Started)
         {
             _watcher.Stop();
@@ -38,41 +42,45 @@ internal sealed class BleSource : IDisposable
     /// </summary>
     private void EnsureRunning()
     {
-        switch (_watcher.Status)
+        if (_watcher.Status is BluetoothLEAdvertisementWatcherStatus.Created
+            or BluetoothLEAdvertisementWatcherStatus.Stopped
+            or BluetoothLEAdvertisementWatcherStatus.Aborted)
         {
-            case BluetoothLEAdvertisementWatcherStatus.Started:
-                _monitor.SetBluetoothAvailable(true);
-                break;
-            case BluetoothLEAdvertisementWatcherStatus.Created:
-            case BluetoothLEAdvertisementWatcherStatus.Stopped:
-            case BluetoothLEAdvertisementWatcherStatus.Aborted:
-                try
-                {
-                    _watcher.Start();
-                }
-                catch (Exception)
-                {
-                    // No Bluetooth adapter at all.
-                    _monitor.SetBluetoothAvailable(false);
-                }
-
-                break;
+            try
+            {
+                _watcher.Start();
+            }
+            catch (Exception)
+            {
+                // No Bluetooth adapter; RadioControl reports that to the interface.
+            }
         }
     }
 
     private void OnReceived(BluetoothLEAdvertisementWatcher sender, BluetoothLEAdvertisementReceivedEventArgs args)
     {
-        foreach (var section in args.Advertisement.ManufacturerData)
+        var address = args.BluetoothAddress;
+        var rssi = args.RawSignalStrengthInDBm;
+        try
         {
-            _monitor.Ingest(args.BluetoothAddress, args.RawSignalStrengthInDBm, section.CompanyId, section.Data.ToArray());
-        }
-    }
+            foreach (var section in args.Advertisement.ManufacturerData)
+            {
+                _monitor.Advertisement(address, rssi, Hub.ManufacturerData, section.CompanyId, section.Data.ToArray());
+            }
 
-    private void OnStopped(BluetoothLEAdvertisementWatcher sender, BluetoothLEAdvertisementWatcherStoppedEventArgs args)
-    {
-        if (args.Error != BluetoothError.Success)
+            foreach (var section in args.Advertisement.GetSectionsByType(ServiceData16))
+            {
+                var data = section.Data.ToArray();
+                if (data.Length > 2)
+                {
+                    var uuid = (ushort)(data[0] | data[1] << 8);
+                    _monitor.Advertisement(address, rssi, Hub.ServiceData, uuid, data.AsSpan(2));
+                }
+            }
+        }
+        catch (ObjectDisposedException)
         {
-            _monitor.SetBluetoothAvailable(false);
+            // An advertisement that arrived while the application was shutting down.
         }
     }
 }

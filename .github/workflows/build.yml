@@ -1,8 +1,13 @@
 name: Build
 
+# Every push and pull request builds the application and keeps the result as artifacts.
+# A tag "v1.2.3" also publishes a release with that version: the files appear under
+# Releases, and the application's updater picks them up from there.
+
 on:
   push:
     branches: [main, master]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
     inputs:
@@ -43,6 +48,7 @@ jobs:
             rust_target: aarch64-pc-windows-msvc
     env:
       HAS_CORE_TOKEN: ${{ secrets.CORE_REPO_TOKEN != '' }}
+      NAME: btManage-windows-${{ matrix.arch }}
     steps:
       - name: Require the core token
         if: env.HAS_CORE_TOKEN != 'true'
@@ -64,9 +70,19 @@ jobs:
           token: ${{ secrets.CORE_REPO_TOKEN }}
           path: btManage-core
 
-      - name: Record the core revision
+      # A tag v1.2.3 gives version 1.2.3. Other builds get 0.0.<run number>, which every
+      # release is newer than.
+      - name: Work out the version
+        id: version
         shell: bash
-        run: echo "Built against btManage-core \`$(git -C btManage-core rev-parse HEAD)\`" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="0.0.${GITHUB_RUN_NUMBER}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Version $version, built against btManage-core \`$(git -C btManage-core rev-parse HEAD)\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Install Rust
         shell: bash
@@ -85,16 +101,78 @@ jobs:
           dotnet-version: 10.0.x
 
       # Builds the Rust core too: see build/RustCore.targets.
-      - name: Publish
+      - name: Publish the application folder
         run: >
           dotnet publish btManage-windows/src/BtManage/BtManage.csproj
           -c Release
           -r ${{ matrix.rid }}
           -p:Platform=${{ matrix.platform }}
-          -o publish
+          -p:Version=${{ steps.version.outputs.version }}
+          -p:UpdateRepository=${{ github.repository }}
+          -o publish/folder
+
+      - name: Publish the single executable
+        run: >
+          dotnet publish btManage-windows/src/BtManage/BtManage.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          -p:Platform=${{ matrix.platform }}
+          -p:Version=${{ steps.version.outputs.version }}
+          -p:UpdateRepository=${{ github.repository }}
+          -p:PublishSingleFile=true
+          -p:IncludeAllContentForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true
+          -o publish/single
+
+      # The names are part of the contract with the updater: it looks for
+      # "windows-<arch>.zip" or "windows-<arch>-portable.exe" among the release files.
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Remove-Item publish/folder/*.pdb, publish/single/*.pdb -ErrorAction SilentlyContinue
+          Compress-Archive -Path publish/folder/* -DestinationPath "dist/$env:NAME.zip"
+          7z a -t7z -mx=9 "dist/$env:NAME.7z" ./publish/folder/* | Select-Object -Last 2
+          Copy-Item publish/single/BtManage.exe "dist/$env:NAME-portable.exe"
+
+      # Not tried on a runner yet, so a failure here does not hold back the other files.
+      - name: Build the installer
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress -y
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) {
+            $iscc = Get-ChildItem "${env:ProgramFiles(x86)}\Inno Setup*\ISCC.exe" | Select-Object -Last 1 -ExpandProperty FullName
+          }
+          & $iscc "/DAppVersion=${{ steps.version.outputs.version }}" "/DArch=${{ matrix.arch }}" `
+            "/DSourceDir=$PWD\publish\folder" "/DOutputDir=$PWD\dist" btManage-windows\installer\btManage.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - uses: actions/upload-artifact@v7
         with:
           name: btManage-windows-${{ matrix.arch }}
-          path: publish
+          path: dist/*
           if-no-files-found: error
+
+  release:
+    name: Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
+            || gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes
+          gh release upload "$GITHUB_REF_NAME" dist/* --clobber

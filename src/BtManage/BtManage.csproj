@@ -35,7 +35,14 @@
     <DefaultLanguage>en-US</DefaultLanguage>
   </PropertyGroup>
 
+  <!-- Where the application looks for its updates: the GitHub releases of this repository.
+       CI passes the repository it runs in. -->
+  <PropertyGroup>
+    <UpdateRepository Condition="'$(UpdateRepository)' == ''">fhnb16/btManage-windows</UpdateRepository>
+  </PropertyGroup>
+
   <ItemGroup>
+    <AssemblyMetadata Include="UpdateRepository" Value="$(UpdateRepository)" />
     <Content Include="Assets\app.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

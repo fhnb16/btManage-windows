@@ -4,7 +4,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace BtManage.Views;
 
-/// <summary>The nearest device: its name and its batteries.</summary>
+/// <summary>A device with its batteries: three columns for earbuds, one for everything else.</summary>
 public sealed partial class DeviceCard : UserControl
 {
     public DeviceCard()
@@ -12,23 +12,32 @@ public sealed partial class DeviceCard : UserControl
         InitializeComponent();
     }
 
-    internal void Set(Device device)
+    /// <summary>Whether the name row is shown. The window shows the name in its own header.</summary>
+    internal bool ShowName
+    {
+        get => Header.Visibility == Visibility.Visible;
+        set => Header.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    internal void Set(Device device, int lowThreshold)
     {
         NameText.Text = DeviceText.Name(device);
-        AgeText.Text = DeviceText.Age(device);
+        StatusText.Text = device.Connected ? string.Empty : DeviceText.Status(device);
 
-        if (device.IsHeadphones)
+        if (device.HasEarbudCells)
         {
-            First.Set(CellKind.Main, device.Main);
+            First.Set(Role.Left, device.Cell(Role.Left), device.Kind, lowThreshold);
+            Second.Set(Role.Right, device.Cell(Role.Right), device.Kind, lowThreshold);
+            Third.Set(Role.Case, device.Cell(Role.Case), device.Kind, lowThreshold);
         }
         else
         {
-            First.Set(CellKind.Left, device.Left);
-            Second.Set(CellKind.Right, device.Right);
-            Third.Set(CellKind.Case, device.Case);
+            First.Set(Role.Main, device.Cell(Role.Main), device.Kind, lowThreshold);
         }
 
-        var earbuds = device.IsHeadphones ? Visibility.Collapsed : Visibility.Visible;
+        // A single battery takes the whole width.
+        Grid.SetColumnSpan(First, device.HasEarbudCells ? 1 : 3);
+        var earbuds = device.HasEarbudCells ? Visibility.Visible : Visibility.Collapsed;
         Second.Visibility = earbuds;
         Third.Visibility = earbuds;
     }

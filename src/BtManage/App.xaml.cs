@@ -1,6 +1,7 @@
 using BtManage.Bluetooth;
 using BtManage.Notifications;
 using BtManage.Tray;
+using BtManage.Updates;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 
@@ -9,35 +10,125 @@ namespace BtManage;
 public partial class App : Application
 {
     private readonly Options _options;
+    private readonly List<IDisposable> _sources = [];
+    private DispatcherQueue? _queue;
+    private readonly AppSettings _settings;
     private DeviceMonitor? _monitor;
-    private IDisposable? _source;
+    private RadioControl? _radio;
     private FlyoutWindow? _flyout;
+    private MainWindow? _main;
     private TrayIcon? _tray;
     private Notifier? _notifier;
+    private readonly Updater _updater = new();
+    private long _updateCheckedAt = Environment.TickCount64 - UpdateInterval + FirstUpdateCheckDelay;
 
-    internal App(Options options)
+    /// <summary>Updates are looked for shortly after start and then once a day, in milliseconds.</summary>
+    private const long UpdateInterval = 24 * 60 * 60 * 1000;
+    private const long FirstUpdateCheckDelay = 30_000;
+
+    internal App(Options options, AppSettings settings)
     {
         _options = options;
+        _settings = settings;
         InitializeComponent();
+        // The theme of an application can be set only here, before any window exists.
+        if (Appearance.Theme(settings) is { } theme)
+        {
+            RequestedTheme = theme;
+        }
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        _monitor = new DeviceMonitor(DispatcherQueue.GetForCurrentThread());
-        _flyout = new FlyoutWindow(_monitor);
-        _notifier = new Notifier();
+        _queue = DispatcherQueue.GetForCurrentThread();
+        // Before the first window: the controls read the accent when they are created.
+        Appearance.ApplyAccent(this, _settings);
+        if (_options.UpdateFrom is { } archive)
+        {
+            // Install from a local archive and come back as the new version.
+            if (Updater.InstallFrom(archive))
+            {
+                Exit();
+                return;
+            }
+        }
+
+        // Demo mode remembers no levels.
+        _monitor = new DeviceMonitor(_queue, _options.Demo ? null : AppPaths.State);
+        _radio = new RadioControl(_queue);
+
+        _flyout = new FlyoutWindow(_monitor, _settings, _radio);
+        _flyout.OpenRequested += ShowMain;
+
+        _notifier = new Notifier(_settings);
+        _notifier.Opened += device => _queue.TryEnqueue(() => ShowMain(device));
+        Program.ShowRequested += () => _queue.TryEnqueue(() => ShowMain(null));
 
         _tray = new TrayIcon(_flyout.Handle);
         _tray.Activated += _flyout.Toggle;
+        _tray.OpenRequested += () => ShowMain(null);
         _tray.SettingsRequested += BluetoothSettings.Open;
         _tray.ExitRequested += Quit;
 
         _monitor.Changed += OnDevicesChanged;
-        _source = _options.Demo ? new DemoSource(_monitor) : new BleSource(_monitor);
+        _monitor.Tick += CheckForUpdates;
+        if (_options.Demo)
+        {
+            _sources.Add(new DemoSource(_monitor));
+        }
+        else
+        {
+            _sources.Add(new BleSource(_monitor));
+            _sources.Add(new SystemDeviceSource(_monitor));
+            _sources.Add(new GamepadSource(_monitor, _settings));
+        }
 
-        if (_options.Show)
+        if (_options.Flyout)
         {
             _flyout.ShowFlyout();
+        }
+        else if (!_options.Tray)
+        {
+            ShowMain(_options.Open);
+        }
+    }
+
+    /// <summary>Opens the application window in the middle of the screen.</summary>
+    private void ShowMain(string? deviceId)
+    {
+        if (_main is null)
+        {
+            _main = new MainWindow(_monitor!, _settings, _radio!, _updater);
+            _main.RestartRequested += Restart;
+            _main.QuitRequested += Quit;
+        }
+
+        _main.ShowCentered(deviceId);
+    }
+
+    /// <summary>Starts the application anew, for a theme or a language to take effect.</summary>
+    private void Restart()
+    {
+        Appearance.Restart(_options);
+        Quit();
+    }
+
+    /// <summary>Looks for a newer release once a day and tells the user about each one once.</summary>
+    private async void CheckForUpdates()
+    {
+        if (!_settings.CheckUpdates || _options.Demo || Environment.TickCount64 - _updateCheckedAt < UpdateInterval)
+        {
+            return;
+        }
+
+        _updateCheckedAt = Environment.TickCount64;
+        // By now the script of an update that started this process has finished.
+        Updater.CleanUp();
+        if (await _updater.CheckAsync() is { } release && release.Version != _settings.AnnouncedVersion)
+        {
+            _settings.AnnouncedVersion = release.Version;
+            _settings.Save();
+            _notifier?.Announce(Strings.Get("AppName"), Strings.Format("UpdateAvailable", release.Version), MainWindow.SettingsId);
         }
     }
 
@@ -50,7 +141,11 @@ public partial class App : Application
 
     private void Quit()
     {
-        _source?.Dispose();
+        foreach (var source in _sources)
+        {
+            source.Dispose();
+        }
+
         _monitor?.Dispose();
         _tray?.Dispose();
         _notifier?.Dispose();

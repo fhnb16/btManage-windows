@@ -5,21 +5,27 @@ using Microsoft.Windows.AppNotifications.Builder;
 namespace BtManage.Notifications;
 
 /// <summary>
-/// Shows a toast when a device comes into range and when one of its batteries runs low.
+/// Shows a toast when headphones connect or come near, and when a battery of any device runs
+/// low. Clicking a toast raises <see cref="Opened"/> with the device it is about.
 /// </summary>
 internal sealed class Notifier : IDisposable
 {
-    /// <summary>A device silent for this long counts as gone; hearing it again is an arrival.</summary>
-    private const long GoneMs = 60_000;
+    private const string DeviceArgument = "device";
 
+    private readonly AppSettings _settings;
     private readonly Dictionary<string, Seen> _seen = [];
     private readonly bool _registered;
 
-    public Notifier()
+    /// <summary>The first list only sets the baseline: nothing in it is news.</summary>
+    private bool _primed;
+
+    public Notifier(AppSettings settings)
     {
+        _settings = settings;
         try
         {
-            // Name and icon shown in the header of the toast.
+            // The handler must be in place before Register, or a click starts a second process.
+            AppNotificationManager.Default.NotificationInvoked += OnInvoked;
             var icon = new Uri(Path.Combine(AppContext.BaseDirectory, "Assets", "app.ico"));
             AppNotificationManager.Default.Register(Strings.Get("AppName"), icon);
             _registered = true;
@@ -27,74 +33,93 @@ internal sealed class Notifier : IDisposable
         catch (Exception)
         {
             // Notifications are unavailable, for example in an elevated process. The tray icon
-            // and the flyout still work.
+            // and the windows still work.
         }
     }
+
+    /// <summary>A toast was clicked. Raised on a background thread, with the device identifier.</summary>
+    public event Action<string?>? Opened;
 
     public void Update(Snapshot snapshot)
     {
         foreach (var device in snapshot.Devices)
         {
-            var present = device.AgeMs < GoneMs;
+            var active = device.IsActive;
             var low = LowCells(device);
             _seen.TryGetValue(device.Id, out var before);
+            _seen[device.Id] = new Seen(active, low.Mask);
 
-            if (present && !before.Present)
+            // Only the user's own devices are news: somebody else's earbuds walking past are not.
+            if (!_primed || !active || !device.Paired || _settings.MutedDevices.Contains(device.Id))
             {
-                Show(DeviceText.Name(device), DeviceText.Levels(device));
+                continue;
             }
-            else if (present && (low.Mask & ~before.LowMask) != 0)
+
+            if (!before.Active && IsAudio(device) && device.Cells.Count > 0)
+            {
+                if (_settings.NotifyOnArrival)
+                {
+                    Show(device, DeviceText.Levels(device));
+                }
+            }
+            else if ((low.Mask & ~before.LowMask) != 0 && _settings.NotifyOnLow)
             {
                 // Another battery dropped to the threshold. Further drops of the same one stay quiet.
-                Show(DeviceText.Name(device), Strings.Format("ToastLow", low.Text));
+                Show(device, Strings.Format("ToastLow", low.Text));
             }
-
-            _seen[device.Id] = new Seen(present, low.Mask);
         }
 
         foreach (var id in _seen.Keys.Except(snapshot.Devices.Select(device => device.Id)).ToList())
         {
             _seen.Remove(id);
         }
+
+        _primed = true;
     }
+
+    /// <summary>Shows a toast that is not about a device. A click reports <paramref name="target"/>.</summary>
+    public void Announce(string title, string body, string target) => Show(title, body, target);
 
     public void Dispose()
     {
         if (_registered)
         {
+            AppNotificationManager.Default.NotificationInvoked -= OnInvoked;
             AppNotificationManager.Default.Unregister();
         }
     }
 
-    /// <summary>The batteries that are low: one bit each, and the same as text.</summary>
-    private static (int Mask, string Text) LowCells(Device device)
+    private static bool IsAudio(Device device) =>
+        device.Kind is Kind.Earbuds or Kind.Headphones or Kind.Headset or Kind.Speaker;
+
+    /// <summary>The batteries that are low and current: one bit each, and the same as text.</summary>
+    private (int Mask, string Text) LowCells(Device device)
     {
         var mask = 0;
         var parts = new List<string>(3);
-        Add(1, "CellLeft", device.Left);
-        Add(2, "CellRight", device.Right);
-        Add(4, "CellCase", device.Case);
-        Add(8, "CellMain", device.Main);
-        return (mask, string.Join(", ", parts));
-
-        void Add(int bit, string label, Cell? cell)
+        foreach (var cell in device.Cells.Where(cell => cell.IsFresh && cell.IsLow(_settings.LowThreshold)))
         {
-            if (cell is { IsLow: true })
-            {
-                mask |= bit;
-                parts.Add($"{Strings.Get(label)} {DeviceText.Percent(cell.Percent)}");
-            }
+            mask |= 1 << (int)cell.Role;
+            parts.Add(device.HasEarbudCells
+                ? $"{DeviceText.RoleLabel(cell.Role)} {DeviceText.Percent(cell.Percent)}"
+                : DeviceText.Percent(cell.Percent));
         }
+
+        return (mask, string.Join(", ", parts));
     }
 
-    private void Show(string title, string body)
+    private void Show(Device device, string body) => Show(DeviceText.Name(device), body, device.Id);
+
+    private void Show(string title, string body, string target)
     {
         if (!_registered)
         {
             return;
         }
 
-        var builder = new AppNotificationBuilder().AddText(title);
+        var builder = new AppNotificationBuilder()
+            .AddArgument(DeviceArgument, target)
+            .AddText(title);
         if (body.Length > 0)
         {
             builder.AddText(body);
@@ -110,5 +135,8 @@ internal sealed class Notifier : IDisposable
         }
     }
 
-    private readonly record struct Seen(bool Present, int LowMask);
+    private void OnInvoked(AppNotificationManager sender, AppNotificationActivatedEventArgs args) =>
+        Opened?.Invoke(args.Arguments.TryGetValue(DeviceArgument, out var device) ? device : null);
+
+    private readonly record struct Seen(bool Active, int LowMask);
 }

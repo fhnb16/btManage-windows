@@ -37,6 +37,7 @@ internal sealed class TrayIcon : IDisposable
     private const uint TPM_BOTTOMALIGN = 0x0020;
     private const nuint MenuSettings = 1;
     private const nuint MenuExit = 2;
+    private const nuint MenuOpen = 3;
 
     private readonly nint _window;
     private readonly SubclassProc _procedure;
@@ -55,6 +56,9 @@ internal sealed class TrayIcon : IDisposable
 
     /// <summary>The icon was clicked or chosen with the keyboard.</summary>
     public event Action? Activated;
+
+    /// <summary>"Open btManage" was chosen from the menu.</summary>
+    public event Action? OpenRequested;
 
     public event Action? SettingsRequested;
 
@@ -164,6 +168,7 @@ internal sealed class TrayIcon : IDisposable
         var menu = CreatePopupMenu();
         try
         {
+            AppendMenuW(menu, MF_STRING, MenuOpen, Strings.Get("MenuOpen"));
             AppendMenuW(menu, MF_STRING, MenuSettings, Strings.Get("BluetoothSettings"));
             AppendMenuW(menu, MF_SEPARATOR, 0, null);
             AppendMenuW(menu, MF_STRING, MenuExit, Strings.Get("MenuExit"));
@@ -176,6 +181,9 @@ internal sealed class TrayIcon : IDisposable
 
             switch (command)
             {
+                case MenuOpen:
+                    OpenRequested?.Invoke();
+                    break;
                 case MenuSettings:
                     SettingsRequested?.Invoke();
                     break;

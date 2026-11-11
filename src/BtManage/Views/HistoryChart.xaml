@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="BtManage.Views.HistoryChart"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    IsTabStop="False">
+    <StackPanel Spacing="8">
+        <Grid Height="168">
+            <Canvas x:Name="Plot" />
+            <TextBlock x:Name="EmptyText"
+                       Style="{StaticResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Visibility="Collapsed" />
+        </Grid>
+        <StackPanel x:Name="Legend" Orientation="Horizontal" Spacing="16" Margin="32,0,0,0" />
+    </StackPanel>
+</UserControl>

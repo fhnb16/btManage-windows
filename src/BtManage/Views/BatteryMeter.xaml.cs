@@ -20,10 +20,12 @@ public sealed partial class BatteryMeter : UserControl
     }
 
     /// <summary>Sets the level. A null <paramref name="percent"/> leaves every segment empty.</summary>
-    public void Set(int? percent, bool low)
+    /// <param name="dimmed">For a level that is remembered rather than current.</param>
+    public void Set(int? percent, bool low, bool dimmed = false)
     {
         _filled = percent is { } value ? Math.Clamp((int)Math.Round(value / 10.0), 0, Segments) : 0;
         VisualStateManager.GoToState(this, low ? "Low" : "Normal", useTransitions: false);
+        Filled.Opacity = dimmed ? 0.4 : 1;
         Draw();
     }
 

@@ -6,14 +6,6 @@ using Microsoft.UI.Xaml.Media;
 
 namespace BtManage.Views;
 
-internal enum CellKind
-{
-    Left,
-    Right,
-    Case,
-    Main,
-}
-
 /// <summary>One battery: its outline, level, meter and label.</summary>
 public sealed partial class BatteryCell : UserControl
 {
@@ -22,29 +14,34 @@ public sealed partial class BatteryCell : UserControl
         InitializeComponent();
     }
 
-    internal void Set(CellKind kind, Cell? cell)
+    /// <param name="cell">Null for a level that has not been reported.</param>
+    /// <param name="kind">Kind of the device, for the glyph of a single battery.</param>
+    /// <param name="lowThreshold">At or below this level the meter turns to the warning colour.</param>
+    internal void Set(Role role, Cell? cell, Kind kind, int lowThreshold)
     {
-        LeftOutline.Visibility = Visible(kind == CellKind.Left);
-        RightOutline.Visibility = Visible(kind == CellKind.Right);
-        CaseOutline.Visibility = Visible(kind == CellKind.Case);
-        MainOutline.Visibility = Visible(kind == CellKind.Main);
+        LeftOutline.Visibility = Visible(role == Role.Left);
+        RightOutline.Visibility = Visible(role == Role.Right);
+        CaseOutline.Visibility = Visible(role == Role.Case);
+        KindIcon.Visibility = Visible(role == Role.Main);
+        KindIcon.Glyph = DeviceText.Glyph(kind);
 
-        var label = Strings.Get(kind switch
-        {
-            CellKind.Left => "CellLeft",
-            CellKind.Right => "CellRight",
-            CellKind.Case => "CellCase",
-            _ => "CellMain",
-        });
-
-        // A level that has not been reported yet shows as a dash, in the weakest text colour.
+        // No level shows as a dash; a remembered one is dimmed and carries its age.
+        var current = cell is { IsFresh: true };
         PercentText.Text = cell is null ? "—" : DeviceText.Percent(cell.Percent);
         PercentText.Foreground = (Brush)Application.Current.Resources[
-            cell is null ? "TextFillColorTertiaryBrush" : "TextFillColorPrimaryBrush"];
-        Meter.Set(cell?.Percent, low: cell is { IsLow: true });
+            cell is null ? "TextFillColorTertiaryBrush" : current ? "TextFillColorPrimaryBrush" : "TextFillColorSecondaryBrush"];
+        Meter.Set(cell?.Percent, low: cell?.IsLow(lowThreshold) == true, dimmed: !current);
 
-        LabelText.Text = cell is { InEar: true } ? $"{label} · {Strings.Get("InEar")}" : label;
-        ChargingIcon.Visibility = Visible(cell is { Charging: true });
+        var label = DeviceText.RoleLabel(role);
+        var note = cell switch
+        {
+            null => null,
+            { IsFresh: false } => DeviceText.Age(cell.AgeMs),
+            { InEar: true } => Strings.Get("InEar"),
+            _ => null,
+        };
+        LabelText.Text = note is null ? label : $"{label} · {note}";
+        ChargingIcon.Visibility = Visible(cell is { Charging: true, IsFresh: true });
 
         var spoken = cell is null ? label : $"{label}, {DeviceText.Percent(cell.Percent)}";
         if (cell is { Charging: true })
@@ -52,7 +49,7 @@ public sealed partial class BatteryCell : UserControl
             spoken += $", {Strings.Get("Charging")}";
         }
 
-        AutomationProperties.SetName(this, spoken);
+        AutomationProperties.SetName(this, note is null ? spoken : $"{spoken}, {note}");
     }
 
     private static Visibility Visible(bool visible) => visible ? Visibility.Visible : Visibility.Collapsed;

@@ -10,47 +10,70 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Devices in range -->
-        <StackPanel x:Name="DevicePanel" Padding="16" Spacing="16">
-            <views:DeviceCard x:Name="Nearest" />
-            <StackPanel x:Name="OtherDevices"
-                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
-                        BorderThickness="0,1,0,0"
-                        Padding="0,8,0,0" />
-        </StackPanel>
+        <StackPanel>
+            <!-- The earbuds in use, with a level for each bud and the case -->
+            <Border x:Name="FeaturedPanel" Padding="16" Background="Transparent" Tapped="OnFeaturedTapped">
+                <views:DeviceCard x:Name="Featured" />
+            </Border>
 
-        <!-- Nothing in range, or Bluetooth is off -->
-        <StackPanel x:Name="EmptyPanel" Padding="16,24" Spacing="4" Visibility="Collapsed">
-            <TextBlock x:Name="EmptyTitle" Style="{StaticResource BodyStrongTextBlockStyle}" />
-            <TextBlock x:Name="EmptyHint"
-                       Style="{StaticResource CaptionTextBlockStyle}"
-                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                       TextWrapping="Wrap" />
+            <!-- The other devices that are connected or nearby -->
+            <Border x:Name="ListPanel"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    Padding="0,4">
+                <ListView x:Name="DeviceList"
+                          SelectionMode="None"
+                          IsItemClickEnabled="True"
+                          ItemClick="OnDeviceClick"
+                          MaxHeight="264" />
+            </Border>
+
+            <!-- Nothing to show, or Bluetooth is off -->
+            <StackPanel x:Name="EmptyPanel" Padding="16,24" Spacing="4" Visibility="Collapsed">
+                <TextBlock x:Name="EmptyTitle" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <TextBlock x:Name="EmptyHint"
+                           Style="{StaticResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           TextWrapping="Wrap" />
+                <Button x:Name="TurnOnButton" Margin="0,12,0,0" Click="OnTurnOnClick" Visibility="Collapsed" />
+            </StackPanel>
         </StackPanel>
 
         <Border Grid.Row="1"
                 BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
                 BorderThickness="0,1,0,0"
-                Padding="4,8">
-            <HyperlinkButton x:Name="SettingsButton" Padding="12,6" Click="OnSettingsClick">
-                <HyperlinkButton.Resources>
-                    <!-- A quiet link: the accent is kept for the charge meters. -->
-                    <ResourceDictionary>
-                        <ResourceDictionary.ThemeDictionaries>
-                            <ResourceDictionary x:Key="Default">
-                                <StaticResource x:Key="HyperlinkButtonForeground" ResourceKey="TextFillColorPrimaryBrush" />
-                                <StaticResource x:Key="HyperlinkButtonForegroundPointerOver" ResourceKey="TextFillColorPrimaryBrush" />
-                                <StaticResource x:Key="HyperlinkButtonForegroundPressed" ResourceKey="TextFillColorSecondaryBrush" />
-                            </ResourceDictionary>
-                            <ResourceDictionary x:Key="Light">
-                                <StaticResource x:Key="HyperlinkButtonForeground" ResourceKey="TextFillColorPrimaryBrush" />
-                                <StaticResource x:Key="HyperlinkButtonForegroundPointerOver" ResourceKey="TextFillColorPrimaryBrush" />
-                                <StaticResource x:Key="HyperlinkButtonForegroundPressed" ResourceKey="TextFillColorSecondaryBrush" />
-                            </ResourceDictionary>
-                        </ResourceDictionary.ThemeDictionaries>
-                    </ResourceDictionary>
-                </HyperlinkButton.Resources>
-            </HyperlinkButton>
+                Padding="4,8,8,8">
+            <Grid>
+                <HyperlinkButton x:Name="AllDevicesButton" Padding="12,6" Click="OnAllDevicesClick">
+                    <HyperlinkButton.Resources>
+                        <!-- A quiet link: the accent is kept for the charge meters. -->
+                        <ResourceDictionary>
+                            <ResourceDictionary.ThemeDictionaries>
+                                <ResourceDictionary x:Key="Default">
+                                    <StaticResource x:Key="HyperlinkButtonForeground" ResourceKey="TextFillColorPrimaryBrush" />
+                                    <StaticResource x:Key="HyperlinkButtonForegroundPointerOver" ResourceKey="TextFillColorPrimaryBrush" />
+                                    <StaticResource x:Key="HyperlinkButtonForegroundPressed" ResourceKey="TextFillColorSecondaryBrush" />
+                                </ResourceDictionary>
+                                <ResourceDictionary x:Key="Light">
+                                    <StaticResource x:Key="HyperlinkButtonForeground" ResourceKey="TextFillColorPrimaryBrush" />
+                                    <StaticResource x:Key="HyperlinkButtonForegroundPointerOver" ResourceKey="TextFillColorPrimaryBrush" />
+                                    <StaticResource x:Key="HyperlinkButtonForegroundPressed" ResourceKey="TextFillColorSecondaryBrush" />
+                                </ResourceDictionary>
+                            </ResourceDictionary.ThemeDictionaries>
+                        </ResourceDictionary>
+                    </HyperlinkButton.Resources>
+                </HyperlinkButton>
+
+                <Button x:Name="SettingsButton"
+                        HorizontalAlignment="Right"
+                        Width="32"
+                        Height="32"
+                        Padding="0"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Click="OnSettingsClick">
+                    <FontIcon Glyph="&#xE713;" FontSize="16" />
+                </Button>
+            </Grid>
         </Border>
     </Grid>
 </Window>

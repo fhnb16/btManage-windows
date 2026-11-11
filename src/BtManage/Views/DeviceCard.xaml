@@ -6,7 +6,7 @@
     xmlns:views="using:BtManage.Views"
     IsTabStop="False">
     <StackPanel Spacing="16">
-        <Grid ColumnSpacing="12">
+        <Grid x:Name="Header" ColumnSpacing="12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
@@ -14,7 +14,7 @@
             <TextBlock x:Name="NameText"
                        Style="{StaticResource BodyStrongTextBlockStyle}"
                        TextTrimming="CharacterEllipsis" />
-            <TextBlock x:Name="AgeText"
+            <TextBlock x:Name="StatusText"
                        Grid.Column="1"
                        Style="{StaticResource CaptionTextBlockStyle}"
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
