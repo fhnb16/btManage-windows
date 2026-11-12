@@ -11,6 +11,7 @@ The Windows client of btManage: WinUI 3 on .NET 10, unpackaged and self-containe
 - **Logic that every platform needs goes into the core**, not here. If Linux or Android would want it too, it is not a C# change.
 - **Tooling is PowerShell, C# or Rust.** No Python or Node, neither as scripts nor as build steps.
 - **Do not commit or push unless asked.** The maintainer does that.
+- **Raise the version with every change that ships**, as `major.minor.patch`: patch for a fix, minor for a new capability, major for a break. The version is `<Version>` in `src/BtManage/BtManage.csproj`; keep `assemblyIdentity` in `app.manifest` in step. CI adds a fourth number by itself only when the same version is built again.
 - **Strings** are edited in `tools/make-strings.ps1`, English and Russian together, then `pwsh tools/make-strings.ps1`. Never edit the `.resw` files by hand.
 - **The icon** is drawn by `tools/make-icon.ps1`. The tray glyph in `Tray/TrayGlyph.cs` uses the same numbers; change both.
 - **Release file names are a contract** with the updater (`Updates/Updater.cs`): `btManage-windows-<arch>.zip` and `btManage-windows-<arch>-portable.exe`. Renaming them strands installed copies.
