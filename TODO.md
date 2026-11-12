@@ -9,6 +9,7 @@
 - Windows on ARM.
 - The installer (`installer/btManage.iss`) has not been built yet, neither locally nor on a runner.
 - A click on a notification opening the window on the device.
+- The Material design (`Appearance.ApplyDesign`): written without a build or a look at the result. Check both windows in light and dark, with the system accent and with Bluetooth blue.
 
 ## Devices and data
 

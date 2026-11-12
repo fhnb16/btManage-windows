@@ -37,6 +37,12 @@ internal sealed class AppSettings
     /// </summary>
     public bool PlayStationFullReports { get; set; }
 
+    /// <summary>
+    /// The look of the application: "fluent" for the look of Windows, "material" for
+    /// Material Design. Applied at start.
+    /// </summary>
+    public string Design { get; set; } = "fluent";
+
     /// <summary>"system", "light" or "dark". Applied at start.</summary>
     public string Theme { get; set; } = "system";
 

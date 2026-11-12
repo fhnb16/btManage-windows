@@ -11,7 +11,7 @@ For Windows 10 and Windows 11.
 - **Control.** Connect and disconnect audio devices, remove a pairing, switch Bluetooth on and off.
 - **Notifications.** When your headphones connect or come near, and when a battery drops to the threshold. Clicking one opens the window on that device.
 - **Remembered levels.** A level that is no longer reported, such as the case with both earbuds out, stays on screen with its age.
-- **Settings.** Theme, accent colour (the system's or Bluetooth blue), window backdrop (Acrylic, Mica, Mica Alt), language (English, Russian), start with Windows, updates.
+- **Settings.** Design (Fluent, or Material with opaque tinted surfaces and rounder corners), theme, accent colour (the system's or Bluetooth blue), window backdrop (Acrylic, Mica, Mica Alt; Fluent only), language (English, Russian), start with Windows, updates.
 - **Updates.** Checks the GitHub releases of this repository once a day and installs a newer one in place, after checking the download against the SHA-256 GitHub reports.
 
 ## Where the levels come from

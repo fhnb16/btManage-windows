@@ -464,6 +464,10 @@ public sealed partial class MainWindow : Window
         Setting("SettingBluetooth", null, _bluetoothSwitch);
 
         Section("SettingsAppearance");
+        Setting("SettingDesign", "SettingRestartHint", Choice(
+            [("fluent", "DesignFluent"), ("material", "DesignMaterial")],
+            _settings.Design,
+            value => SaveAndRestart(() => _settings.Design = value)));
         Setting("SettingTheme", "SettingRestartHint", Choice(
             [("system", "ThemeSystem"), ("light", "ThemeLight"), ("dark", "ThemeDark")],
             _settings.Theme,
@@ -472,10 +476,14 @@ public sealed partial class MainWindow : Window
             [("system", "AccentSystem"), ("bluetooth", "AccentBluetooth")],
             _settings.Accent,
             value => SaveAndRestart(() => _settings.Accent = value)));
-        Setting("SettingBackdrop", null, Choice(
-            [("auto", "BackdropAuto"), ("acrylic", "BackdropAcrylic"), ("mica", "BackdropMica"), ("mica_alt", "BackdropMicaAlt")],
-            _settings.Backdrop,
-            value => Save(() => _settings.Backdrop = value)));
+        if (!Appearance.IsMaterial(_settings))
+        {
+            // Material surfaces are opaque, so there is no backdrop to choose.
+            Setting("SettingBackdrop", null, Choice(
+                [("auto", "BackdropAuto"), ("acrylic", "BackdropAcrylic"), ("mica", "BackdropMica"), ("mica_alt", "BackdropMicaAlt")],
+                _settings.Backdrop,
+                value => Save(() => _settings.Backdrop = value)));
+        }
         Setting("SettingLanguage", "SettingRestartHint", Choice(
             [("system", "LanguageSystem"), ("en", null), ("ru", null)],
             _settings.Language,

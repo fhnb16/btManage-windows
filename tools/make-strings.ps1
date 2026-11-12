@@ -105,6 +105,9 @@ SettingsGeneral | General | Общие
 SettingAutostart | Start with Windows | Запускать вместе с Windows
 SettingBluetooth | Bluetooth | Bluetooth
 SettingsAppearance | Appearance | Оформление
+SettingDesign | Design | Стиль интерфейса
+DesignFluent | Fluent | Fluent
+DesignMaterial | Material | Material
 SettingTheme | Theme | Тема
 ThemeSystem | Use system setting | Как в системе
 ThemeLight | Light | Светлая

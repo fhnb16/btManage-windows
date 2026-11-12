@@ -81,10 +81,82 @@ internal static class Appearance
         return Windows.UI.Color.FromArgb(255, Channel(color.R), Channel(color.G), Channel(color.B));
     }
 
+    /// <summary>Mixes <paramref name="share"/> of one colour into another.</summary>
+    private static Windows.UI.Color Blend(Windows.UI.Color from, Windows.UI.Color into, double share)
+    {
+        byte Channel(byte a, byte b) => (byte)Math.Round(a + (b - a) * share);
+        return Windows.UI.Color.FromArgb(255, Channel(from.R, into.R), Channel(from.G, into.G), Channel(from.B, into.B));
+    }
+
+    /// <summary>The brush behind the windows in the Material design.</summary>
+    private const string MaterialSurfaceKey = "BtmMaterialSurfaceBrush";
+
+    public static bool IsMaterial(AppSettings settings) => settings.Design == "material";
+
+    /// <summary>
+    /// Turns the Fluent look into Material Design, if the user chose that: surfaces in
+    /// solid tones tinted with the accent instead of Mica and Acrylic, cards without a
+    /// border, rounder corners. The controls stay the ones of Windows.
+    ///
+    /// Like the accent, this replaces resources the controls read when they are created, so
+    /// it must run before the first window exists and after <see cref="ApplyAccent"/>.
+    /// </summary>
+    public static void ApplyDesign(Application application, AppSettings settings)
+    {
+        if (!IsMaterial(settings))
+        {
+            return;
+        }
+
+        var accent = BluetoothBlue;
+        if (settings.Accent != "bluetooth")
+        {
+            try
+            {
+                accent = new Windows.UI.ViewManagement.UISettings().GetColorValue(Windows.UI.ViewManagement.UIColorType.Accent);
+            }
+            catch (Exception)
+            {
+                // Keep the blue.
+            }
+        }
+
+        // Material surfaces are neutral tones with a little of the accent in them: the
+        // window lightest (or darkest), the content pane a step off it, cards another step.
+        var dark = application.RequestedTheme == ApplicationTheme.Dark;
+        Windows.UI.Color Tone(byte grey, double share) =>
+            Blend(Windows.UI.Color.FromArgb(255, grey, grey, grey), accent, share);
+        var surface = dark ? Tone(0x14, 0.07) : Tone(0xFB, 0.04);
+        var pane = dark ? Tone(0x19, 0.09) : Tone(0xF6, 0.06);
+        var card = dark ? Tone(0x20, 0.11) : Tone(0xF1, 0.09);
+
+        var resources = application.Resources;
+        resources[MaterialSurfaceKey] = new SolidColorBrush(surface);
+        resources["ApplicationPageBackgroundThemeBrush"] = new SolidColorBrush(surface);
+        resources["LayerFillColorDefaultBrush"] = new SolidColorBrush(pane);
+        resources["CardBackgroundFillColorDefaultBrush"] = new SolidColorBrush(card);
+        resources["CardStrokeColorDefaultBrush"] = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+        // Buttons and drop-downs become pills, cards and dialogs get the larger radius.
+        resources["ControlCornerRadius"] = new CornerRadius(16);
+        resources["OverlayCornerRadius"] = new CornerRadius(16);
+    }
+
     /// <summary>Puts the chosen material behind a window.</summary>
     /// <param name="transient">A panel that comes and goes, as opposed to a window that stays.</param>
     public static void ApplyBackdrop(Window window, FrameworkElement root, AppSettings settings, bool transient)
     {
+        if (IsMaterial(settings))
+        {
+            // Material Design has opaque surfaces: no Mica, no Acrylic.
+            window.SystemBackdrop = null;
+            if (root is Microsoft.UI.Xaml.Controls.Panel surface)
+            {
+                surface.Background = (Brush)Application.Current.Resources[MaterialSurfaceKey];
+            }
+
+            return;
+        }
+
         // Mica exists on Windows 11 only; Acrylic stands in for it elsewhere.
         var mica = MicaController.IsSupported();
         SystemBackdrop? backdrop = settings.Backdrop switch

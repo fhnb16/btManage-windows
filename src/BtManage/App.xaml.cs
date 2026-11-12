@@ -43,6 +43,7 @@ public partial class App : Application
         _queue = DispatcherQueue.GetForCurrentThread();
         // Before the first window: the controls read the accent when they are created.
         Appearance.ApplyAccent(this, _settings);
+        Appearance.ApplyDesign(this, _settings);
         if (_options.UpdateFrom is { } archive)
         {
             // Install from a local archive and come back as the new version.

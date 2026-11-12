@@ -95,6 +95,9 @@
   <data name="SettingAutostart" xml:space="preserve"><value>Start with Windows</value></data>
   <data name="SettingBluetooth" xml:space="preserve"><value>Bluetooth</value></data>
   <data name="SettingsAppearance" xml:space="preserve"><value>Appearance</value></data>
+  <data name="SettingDesign" xml:space="preserve"><value>Design</value></data>
+  <data name="DesignFluent" xml:space="preserve"><value>Fluent</value></data>
+  <data name="DesignMaterial" xml:space="preserve"><value>Material</value></data>
   <data name="SettingTheme" xml:space="preserve"><value>Theme</value></data>
   <data name="ThemeSystem" xml:space="preserve"><value>Use system setting</value></data>
   <data name="ThemeLight" xml:space="preserve"><value>Light</value></data>

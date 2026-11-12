@@ -29,6 +29,8 @@ The look is the system's: Segoe UI Variable, Segoe Fluent Icons, Acrylic or Mica
 - No decoration: no gradients, glows or looping animation.
 - The ten-segment meter is the signature: earbuds report their charge in steps of 10 %.
 
+There is a second design, Material, chosen in the settings. It is the same interface with resources replaced at start (`Appearance.ApplyDesign`): opaque surfaces tinted with the accent instead of Mica and Acrylic, cards without a border, larger corner radii. Use theme resources for surfaces, strokes and radii (`CardBackgroundFillColorDefaultBrush`, `OverlayCornerRadius` and so on), never literal values, or the Material design will not reach your element.
+
 Theme brushes fetched in code come from `Application.Current.Resources`, which follows the application theme. That is why theme, accent and language apply at start and a change restarts the application.
 
 ## Checking a change
