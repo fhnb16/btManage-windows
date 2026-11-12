@@ -84,6 +84,7 @@
   <data name="SourceGatt" xml:space="preserve"><value>Battery Service</value></data>
   <data name="SourceHid" xml:space="preserve"><value>HID report</value></data>
   <data name="SourceGamepad" xml:space="preserve"><value>Game controller interface</value></data>
+  <data name="SourceAap" xml:space="preserve"><value>Accessory protocol</value></data>
   <data name="InfoLastConnected" xml:space="preserve"><value>Last connected</value></data>
   <data name="DeviceNotifications" xml:space="preserve"><value>Notifications about this device</value></data>
   <data name="RemoveDialogTitle" xml:space="preserve"><value>Remove {0}?</value></data>

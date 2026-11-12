@@ -84,6 +84,7 @@
   <data name="SourceGatt" xml:space="preserve"><value>Служба батареи</value></data>
   <data name="SourceHid" xml:space="preserve"><value>HID-отчёт</value></data>
   <data name="SourceGamepad" xml:space="preserve"><value>Интерфейс игровых контроллеров</value></data>
+  <data name="SourceAap" xml:space="preserve"><value>Протокол аксессуаров</value></data>
   <data name="InfoLastConnected" xml:space="preserve"><value>Последнее подключение</value></data>
   <data name="DeviceNotifications" xml:space="preserve"><value>Уведомления об этом устройстве</value></data>
   <data name="RemoveDialogTitle" xml:space="preserve"><value>Удалить {0}?</value></data>

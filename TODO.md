@@ -14,7 +14,8 @@
 ## Devices and data
 
 - Audio codec in use. Windows gives applications no way to ask; the only known route is tracing the Bluetooth audio driver, which needs administrator rights.
-- AirPods controls: noise control, conversation awareness, ear detection. These go over AAP on L2CAP, which Windows applications cannot open without a kernel driver.
+- AirPods controls: noise control, conversation awareness, ear detection. These go over AAP on L2CAP, which Windows applications cannot open without a kernel driver. The packets themselves are in the core (`apple::aap`), as Android uses them.
+- Noise control of other makers' earbuds over RFCOMM, which Windows applications can open (`RfcommDeviceService`): Samsung Galaxy Buds, Sony, Soundcore, Nothing. Each protocol goes into the core, so Android uses the same code; each needs a pair of those earbuds to be tried on. Earbuds of the cheaper makers (HOCO and the like) have no public description of their protocol, and many have no way to switch noise control from a phone or computer at all.
 - Battery of Bluetooth Classic keyboards and mice that report it only in a HID report (generic battery strength usage).
 - Direct read of the GATT Battery Service for Bluetooth LE devices Windows does not keep a level for.
 - Phones: the level a phone reports to a hands-free unit.

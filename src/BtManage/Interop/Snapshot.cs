@@ -37,6 +37,8 @@ internal enum Source
     Gatt,
     Hid,
     Gamepad,
+    /// <summary>Apple's accessory protocol. Android only: Windows cannot open its channel.</summary>
+    Aap,
 }
 
 internal enum Transport
