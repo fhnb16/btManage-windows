@@ -26,7 +26,7 @@ internal static class DeviceRow
             Glyph = DeviceText.Glyph(device.Kind),
             FontSize = 16,
             Width = 20,
-            Foreground = Brush("TextFillColorSecondaryBrush"),
+            Style = Appearance.Style("BtmSecondaryIconStyle"),
             VerticalAlignment = VerticalAlignment.Center,
         });
 
@@ -87,17 +87,17 @@ internal static class DeviceRow
             {
                 Glyph = "",
                 FontSize = 12,
-                Foreground = Brush("TextFillColorSecondaryBrush"),
+                Style = Appearance.Style("BtmSecondaryIconStyle"),
             });
         }
 
         var text = new TextBlock
         {
             Text = DeviceText.Percent(cell.Percent),
-            Foreground = Brush(
-                !cell.IsFresh ? "TextFillColorTertiaryBrush"
-                : cell.IsLow(lowThreshold) ? "SystemFillColorCriticalBrush"
-                : "TextFillColorPrimaryBrush"),
+            Style = Appearance.Style(
+                !cell.IsFresh ? "BtmTertiaryTextStyle"
+                : cell.IsLow(lowThreshold) ? "BtmCriticalTextStyle"
+                : "BtmPrimaryTextStyle"),
         };
         Typography.SetNumeralAlignment(text, FontNumeralAlignment.Tabular);
         panel.Children.Add(text);
@@ -107,10 +107,7 @@ internal static class DeviceRow
     private static TextBlock Caption(string text) => new()
     {
         Text = text,
-        Style = (Style)Application.Current.Resources["CaptionTextBlockStyle"],
-        Foreground = Brush("TextFillColorSecondaryBrush"),
+        Style = Appearance.Style("BtmSecondaryCaptionStyle"),
         VerticalAlignment = VerticalAlignment.Center,
     };
-
-    private static Brush Brush(string key) => (Brush)Application.Current.Resources[key];
 }

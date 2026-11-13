@@ -111,6 +111,7 @@
   <data name="BackdropAcrylic" xml:space="preserve"><value>Acrylic</value></data>
   <data name="BackdropMica" xml:space="preserve"><value>Mica</value></data>
   <data name="BackdropMicaAlt" xml:space="preserve"><value>Mica Alt</value></data>
+  <data name="BackdropSolid" xml:space="preserve"><value>Сплошной</value></data>
   <data name="SettingLanguage" xml:space="preserve"><value>Язык</value></data>
   <data name="LanguageSystem" xml:space="preserve"><value>Как в системе</value></data>
   <data name="SettingRestartHint" xml:space="preserve"><value>Для применения приложение перезапустится</value></data>

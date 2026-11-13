@@ -71,7 +71,7 @@ public sealed partial class HistoryChart : UserControl
             Plot.Children.Add(new Line
             {
                 X1 = LabelWidth, X2 = LabelWidth + width, Y1 = Y(percent), Y2 = Y(percent),
-                Stroke = Brush("DividerStrokeColorDefaultBrush"),
+                Style = Appearance.Style("BtmChartGridStyle"),
                 StrokeThickness = 1,
             });
             Place(Label(percent.ToString()), 0, Y(percent) - 8, LabelWidth - 8, TextAlignment.Right);
@@ -86,14 +86,12 @@ public sealed partial class HistoryChart : UserControl
         var lead = _series.Select(series => series.Role).Min();
         foreach (var series in _series.OrderByDescending(series => series.Role))
         {
-            var brush = Brush(series.Role == lead ? "AccentFillColorDefaultBrush"
-                : series.Role == Role.Case ? "TextFillColorTertiaryBrush"
-                : "TextFillColorSecondaryBrush");
+            var tone = series.Role == lead ? "Lead" : series.Role == Role.Case ? "Tertiary" : "Secondary";
             foreach (var run in Runs(series.Points, start, end))
             {
                 var line = new Polyline
                 {
-                    Stroke = brush,
+                    Style = Appearance.Style($"BtmChart{tone}LineStyle"),
                     StrokeThickness = series.Role == lead ? 2 : 1.5,
                     StrokeLineJoin = PenLineJoin.Round,
                 };
@@ -107,7 +105,7 @@ public sealed partial class HistoryChart : UserControl
 
             if (_series.Count > 1)
             {
-                Legend.Children.Insert(0, LegendItem(series.Role, brush));
+                Legend.Children.Insert(0, LegendItem(series.Role, tone));
             }
         }
     }
@@ -144,10 +142,17 @@ public sealed partial class HistoryChart : UserControl
         }
     }
 
-    private StackPanel LegendItem(Role role, Brush brush)
+    /// <param name="tone">"Lead", "Secondary" or "Tertiary": the colour of the series.</param>
+    private StackPanel LegendItem(Role role, string tone)
     {
         var item = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-        item.Children.Add(new Rectangle { Width = 12, Height = 2, Fill = brush, VerticalAlignment = VerticalAlignment.Center });
+        item.Children.Add(new Rectangle
+        {
+            Width = 12,
+            Height = 2,
+            Style = Appearance.Style($"BtmChart{tone}SwatchStyle"),
+            VerticalAlignment = VerticalAlignment.Center,
+        });
         item.Children.Add(Label(DeviceText.RoleLabel(role)));
         return item;
     }
@@ -164,9 +169,6 @@ public sealed partial class HistoryChart : UserControl
     private static TextBlock Label(string text) => new()
     {
         Text = text,
-        Style = (Style)Application.Current.Resources["CaptionTextBlockStyle"],
-        Foreground = Brush("TextFillColorTertiaryBrush"),
+        Style = Appearance.Style("BtmTertiaryCaptionStyle"),
     };
-
-    private static Brush Brush(string key) => (Brush)Application.Current.Resources[key];
 }

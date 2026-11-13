@@ -67,8 +67,8 @@ public sealed partial class FlyoutWindow : Window
             HideFlyout();
         };
 
-        Appearance.ApplyBackdrop(this, Root, _settings, transient: true);
-        _settings.Changed += () => Appearance.ApplyBackdrop(this, Root, _settings, transient: true);
+        Appearance.ApplyWindow(this, Root, _settings, transient: true);
+        _settings.Changed += () => Appearance.ApplyWindow(this, Root, _settings, transient: true);
 
         Activated += (_, args) =>
         {

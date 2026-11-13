@@ -9,7 +9,7 @@
 - Windows on ARM.
 - The installer (`installer/btManage.iss`) has not been built yet, neither locally nor on a runner.
 - A click on a notification opening the window on the device.
-- The Material design (`Appearance.ApplyDesign`): written without a build or a look at the result. Check both windows in light and dark, with the system accent and with Bluetooth blue.
+- The Material design and the settings that now apply without a restart (`Appearance`, 0.3.0): written without a build or a look at the result. Switch design, theme, accent and backdrop back and forth with both windows open and check that every surface, text colour, the caption buttons, the chart and the dialogs follow. The accent is the least certain: whether the controls take a new accent colour without a restart depends on how WinUI resolves the accent brushes.
 
 ## Devices and data
 
@@ -26,7 +26,7 @@
 
 - Tray menu in the dark theme. The Win32 menu follows the light theme only.
 - Battery level in the tray icon itself, for a device of the user's choice.
-- Settings without restart for theme, accent and language.
+- The language without a restart.
 - Pair a new device from the window instead of sending the user to Windows Settings.
 - Set a device as the default audio output.
 - Second language pass by a native English speaker.

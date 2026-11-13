@@ -28,8 +28,8 @@ public sealed partial class BatteryCell : UserControl
         // No level shows as a dash; a remembered one is dimmed and carries its age.
         var current = cell is { IsFresh: true };
         PercentText.Text = cell is null ? "—" : DeviceText.Percent(cell.Percent);
-        PercentText.Foreground = (Brush)Application.Current.Resources[
-            cell is null ? "TextFillColorTertiaryBrush" : current ? "TextFillColorPrimaryBrush" : "TextFillColorSecondaryBrush"];
+        PercentText.Style = Appearance.Style(
+            cell is null ? "BtmTertiaryTextStyle" : current ? "BtmPrimaryTextStyle" : "BtmSecondaryTextStyle");
         Meter.Set(cell?.Percent, low: cell?.IsLow(lowThreshold) == true, dimmed: !current);
 
         var label = DeviceText.RoleLabel(role);

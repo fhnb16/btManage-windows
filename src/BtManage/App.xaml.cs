@@ -30,20 +30,18 @@ public partial class App : Application
     {
         _options = options;
         _settings = settings;
+        // The theme is set on the content of each window (Appearance.ApplyWindow), which can
+        // change while the application runs; the theme of the application could not.
         InitializeComponent();
-        // The theme of an application can be set only here, before any window exists.
-        if (Appearance.Theme(settings) is { } theme)
-        {
-            RequestedTheme = theme;
-        }
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         _queue = DispatcherQueue.GetForCurrentThread();
-        // Before the first window: the controls read the accent when they are created.
-        Appearance.ApplyAccent(this, _settings);
-        Appearance.ApplyDesign(this, _settings);
+        // Before the first window, and before the windows hear of a change: they take the
+        // resources this sets.
+        Appearance.Apply(this, _settings);
+        _settings.Changed += () => Appearance.Apply(this, _settings);
         if (_options.UpdateFrom is { } archive)
         {
             // Install from a local archive and come back as the new version.
@@ -107,7 +105,7 @@ public partial class App : Application
         _main.ShowCentered(deviceId);
     }
 
-    /// <summary>Starts the application anew, for a theme or a language to take effect.</summary>
+    /// <summary>Starts the application anew, for a language to take effect.</summary>
     private void Restart()
     {
         Appearance.Restart(_options);

@@ -30,9 +30,11 @@ The look is the system's: Segoe UI Variable, Segoe Fluent Icons, Acrylic or Mica
 - No decoration: no gradients, glows or looping animation.
 - The ten-segment meter is the signature: earbuds report their charge in steps of 10 %.
 
-There is a second design, Material, chosen in the settings. It is the same interface with resources replaced at start (`Appearance.ApplyDesign`): opaque surfaces tinted with the accent instead of Mica and Acrylic, cards without a border, larger corner radii. Use theme resources for surfaces, strokes and radii (`CardBackgroundFillColorDefaultBrush`, `OverlayCornerRadius` and so on), never literal values, or the Material design will not reach your element.
+There is a second design, Material, chosen in the settings. It is the same interface with resources replaced (`Appearance.Apply`): surfaces tinted with the accent, translucent over Mica or Acrylic and opaque with the solid backdrop, cards without a border, larger corner radii. Use theme resources for surfaces, strokes and radii (`CardBackgroundFillColorDefaultBrush`, `OverlayCornerRadius` and so on), never literal values, or the Material design will not reach your element.
 
-Theme brushes fetched in code come from `Application.Current.Resources`, which follows the application theme. That is why theme, accent and language apply at start and a change restarts the application.
+Design, theme, accent and backdrop apply while the application runs: `Appearance.Apply` sets the resources of the application, `Appearance.ApplyWindow` sets the theme on the content of a window and turns it over once so that every theme resource is looked up again. Only the language restarts the application.
+
+So never take a theme brush from `Application.Current.Resources` in code: such a brush keeps the theme of the application, not the one the user chose, and does not change with it. Give an element made in code one of the `Btm…Style` styles of `App.xaml` with `Appearance.Style`, whose theme resources follow the element; add a style there when none fits.
 
 ## Checking a change
 

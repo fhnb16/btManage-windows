@@ -58,8 +58,11 @@ public sealed partial class MainWindow : Window
         AppWindow.SetIcon(icon);
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(TitleBar);
-        Appearance.ApplyBackdrop(this, Root, _settings, transient: false);
-        _settings.Changed += () => Appearance.ApplyBackdrop(this, Root, _settings, transient: false);
+        Appearance.ApplyWindow(this, Root, _settings, transient: false);
+        _settings.Changed += () => Appearance.ApplyWindow(this, Root, _settings, transient: false);
+        // The caption buttons are drawn by Windows and do not follow the theme of the content.
+        Root.ActualThemeChanged += (_, _) => ColorCaptionButtons();
+        ColorCaptionButtons();
 
         AppWindow.Closing += (_, args) =>
         {
@@ -84,6 +87,28 @@ public sealed partial class MainWindow : Window
         _radio.Changed += UpdateBluetoothSwitch;
         _updater.Changed += ShowUpdateState;
         ShowUpdateState();
+    }
+
+    /// <summary>Gives the minimise, maximise and close buttons the colours of the content's theme.</summary>
+    private void ColorCaptionButtons()
+    {
+        var bar = AppWindow.TitleBar;
+        var dark = Root.ActualTheme == ElementTheme.Dark;
+        var text = dark ? Microsoft.UI.Colors.White : Microsoft.UI.Colors.Black;
+        bar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
+        bar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+        bar.ButtonForegroundColor = text;
+        bar.ButtonHoverForegroundColor = text;
+        bar.ButtonPressedForegroundColor = text;
+        bar.ButtonInactiveForegroundColor = dark
+            ? Windows.UI.Color.FromArgb(0x87, 0xFF, 0xFF, 0xFF)
+            : Windows.UI.Color.FromArgb(0x72, 0x00, 0x00, 0x00);
+        bar.ButtonHoverBackgroundColor = dark
+            ? Windows.UI.Color.FromArgb(0x0F, 0xFF, 0xFF, 0xFF)
+            : Windows.UI.Color.FromArgb(0x09, 0x00, 0x00, 0x00);
+        bar.ButtonPressedBackgroundColor = dark
+            ? Windows.UI.Color.FromArgb(0x0A, 0xFF, 0xFF, 0xFF)
+            : Windows.UI.Color.FromArgb(0x06, 0x00, 0x00, 0x00);
     }
 
     /// <summary>An update has been staged; the application must exit for it to be applied.</summary>
@@ -182,8 +207,7 @@ public sealed partial class MainWindow : Window
         Content = new TextBlock
         {
             Text = text,
-            Style = (Style)Application.Current.Resources["CaptionTextBlockStyle"],
-            Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+            Style = Appearance.Style("BtmSecondaryCaptionStyle"),
         },
     };
 
@@ -346,7 +370,7 @@ public sealed partial class MainWindow : Window
         row.Children.Add(new TextBlock
         {
             Text = label,
-            Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+            Style = Appearance.Style("BtmSecondaryTextStyle"),
         });
         var text = new TextBlock { Text = value, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
         Grid.SetColumn(text, 1);
@@ -391,6 +415,8 @@ public sealed partial class MainWindow : Window
         var confirm = new ContentDialog
         {
             XamlRoot = Root.XamlRoot,
+            // A dialog opens above the content and does not inherit its theme.
+            RequestedTheme = Root.ActualTheme,
             Title = Strings.Format("RemoveDialogTitle", DeviceText.Name(device)),
             Content = new TextBlock { Text = Strings.Get("RemoveDialogText"), TextWrapping = TextWrapping.Wrap },
             PrimaryButtonText = Strings.Get("RemoveDevice"),
@@ -444,6 +470,7 @@ public sealed partial class MainWindow : Window
     private async Task ShowFailureAsync() => await new ContentDialog
     {
         XamlRoot = Root.XamlRoot,
+        RequestedTheme = Root.ActualTheme,
         Title = Strings.Get("ActionFailed"),
         Content = new TextBlock { Text = Strings.Get("ActionFailedHint"), TextWrapping = TextWrapping.Wrap },
         CloseButtonText = "OK",
@@ -464,26 +491,23 @@ public sealed partial class MainWindow : Window
         Setting("SettingBluetooth", null, _bluetoothSwitch);
 
         Section("SettingsAppearance");
-        Setting("SettingDesign", "SettingRestartHint", Choice(
+        // These apply at once (Appearance); only the language needs a restart.
+        Setting("SettingDesign", null, Choice(
             [("fluent", "DesignFluent"), ("material", "DesignMaterial")],
             _settings.Design,
-            value => SaveAndRestart(() => _settings.Design = value)));
-        Setting("SettingTheme", "SettingRestartHint", Choice(
+            value => Save(() => _settings.Design = value)));
+        Setting("SettingTheme", null, Choice(
             [("system", "ThemeSystem"), ("light", "ThemeLight"), ("dark", "ThemeDark")],
             _settings.Theme,
-            value => SaveAndRestart(() => _settings.Theme = value)));
-        Setting("SettingAccent", "SettingRestartHint", Choice(
+            value => Save(() => _settings.Theme = value)));
+        Setting("SettingAccent", null, Choice(
             [("system", "AccentSystem"), ("bluetooth", "AccentBluetooth")],
             _settings.Accent,
-            value => SaveAndRestart(() => _settings.Accent = value)));
-        if (!Appearance.IsMaterial(_settings))
-        {
-            // Material surfaces are opaque, so there is no backdrop to choose.
-            Setting("SettingBackdrop", null, Choice(
-                [("auto", "BackdropAuto"), ("acrylic", "BackdropAcrylic"), ("mica", "BackdropMica"), ("mica_alt", "BackdropMicaAlt")],
-                _settings.Backdrop,
-                value => Save(() => _settings.Backdrop = value)));
-        }
+            value => Save(() => _settings.Accent = value)));
+        Setting("SettingBackdrop", null, Choice(
+            [("auto", "BackdropAuto"), ("acrylic", "BackdropAcrylic"), ("mica", "BackdropMica"), ("mica_alt", "BackdropMicaAlt"), ("solid", "BackdropSolid")],
+            _settings.Backdrop,
+            value => Save(() => _settings.Backdrop = value)));
         Setting("SettingLanguage", "SettingRestartHint", Choice(
             [("system", "LanguageSystem"), ("en", null), ("ru", null)],
             _settings.Language,
@@ -541,7 +565,7 @@ public sealed partial class MainWindow : Window
         SettingsPanel.Children.Add(new TextBlock
         {
             Text = Strings.Format("AboutVersion", version, Interop.Hub.CoreVersion),
-            Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+            Style = Appearance.Style("BtmSecondaryTextStyle"),
         });
     }
 
@@ -625,8 +649,7 @@ public sealed partial class MainWindow : Window
             text.Children.Add(new TextBlock
             {
                 Text = Strings.Get(hint),
-                Style = (Style)Application.Current.Resources["CaptionTextBlockStyle"],
-                Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+                Style = Appearance.Style("BtmSecondaryCaptionStyle"),
                 TextWrapping = TextWrapping.Wrap,
             });
         }
@@ -683,7 +706,7 @@ public sealed partial class MainWindow : Window
             Glyph = glyph,
             FontSize = 16,
             Width = 20,
-            Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+            Style = Appearance.Style("BtmSecondaryIconStyle"),
         });
         var label = new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center };
         Grid.SetColumn(label, 1);

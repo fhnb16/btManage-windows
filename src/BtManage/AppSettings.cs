@@ -39,20 +39,20 @@ internal sealed class AppSettings
 
     /// <summary>
     /// The look of the application: "fluent" for the look of Windows, "material" for
-    /// Material Design. Applied at start.
+    /// Material Design. Applied at once.
     /// </summary>
     public string Design { get; set; } = "fluent";
 
-    /// <summary>"system", "light" or "dark". Applied at start.</summary>
+    /// <summary>"system", "light" or "dark". Applied at once.</summary>
     public string Theme { get; set; } = "system";
 
     /// <summary>
-    /// The material behind the windows: "auto" (Mica for the window, Acrylic for the tray
-    /// panel), "acrylic", "mica" or "mica_alt".
+    /// The material behind the windows, in either design: "auto" (Mica for the window,
+    /// Acrylic for the tray panel), "acrylic", "mica", "mica_alt", or "solid" for none.
     /// </summary>
     public string Backdrop { get; set; } = "auto";
 
-    /// <summary>"system" for the accent colour of Windows, "bluetooth" for Bluetooth blue. Applied at start.</summary>
+    /// <summary>"system" for the accent colour of Windows, "bluetooth" for Bluetooth blue. Applied at once.</summary>
     public string Accent { get; set; } = "system";
 
     /// <summary>"system", "en" or "ru". Applied at start.</summary>
