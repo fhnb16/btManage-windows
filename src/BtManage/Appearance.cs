@@ -249,6 +249,31 @@ internal static class Appearance
         root.RequestedTheme = theme;
     }
 
+    /// <summary>
+    /// Gives the minimise, maximise and close buttons the colours of the content's theme: they
+    /// are drawn by Windows and do not follow it on their own.
+    /// </summary>
+    public static void ColorCaptionButtons(Microsoft.UI.Windowing.AppWindow window, ElementTheme theme)
+    {
+        var bar = window.TitleBar;
+        var dark = theme == ElementTheme.Dark;
+        var text = dark ? Microsoft.UI.Colors.White : Microsoft.UI.Colors.Black;
+        bar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
+        bar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
+        bar.ButtonForegroundColor = text;
+        bar.ButtonHoverForegroundColor = text;
+        bar.ButtonPressedForegroundColor = text;
+        bar.ButtonInactiveForegroundColor = dark
+            ? Windows.UI.Color.FromArgb(0x87, 0xFF, 0xFF, 0xFF)
+            : Windows.UI.Color.FromArgb(0x72, 0x00, 0x00, 0x00);
+        bar.ButtonHoverBackgroundColor = dark
+            ? Windows.UI.Color.FromArgb(0x0F, 0xFF, 0xFF, 0xFF)
+            : Windows.UI.Color.FromArgb(0x09, 0x00, 0x00, 0x00);
+        bar.ButtonPressedBackgroundColor = dark
+            ? Windows.UI.Color.FromArgb(0x0A, 0xFF, 0xFF, 0xFF)
+            : Windows.UI.Color.FromArgb(0x06, 0x00, 0x00, 0x00);
+    }
+
     /// <summary>The material behind a window, or null for a solid background.</summary>
     private static SystemBackdrop? Backdrop(AppSettings settings, bool transient)
     {

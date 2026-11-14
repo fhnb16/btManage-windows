@@ -189,4 +189,54 @@
   <data name="SettingsAbout" xml:space="preserve"><value>About</value></data>
   <data name="AboutVersion" xml:space="preserve"><value>Version {0}, core {1}</value></data>
   <data name="ToastLow" xml:space="preserve"><value>Low battery: {0}</value></data>
+  <data name="SettingsDeveloper" xml:space="preserve"><value>For developers</value></data>
+  <data name="SettingDeveloper" xml:space="preserve"><value>Developer tools</value></data>
+  <data name="SettingDeveloperHint" xml:space="preserve"><value>Commands of your own to a device. A wrong command can change a device's settings</value></data>
+  <data name="ConsoleOpen" xml:space="preserve"><value>Open</value></data>
+  <data name="ConsoleTitle" xml:space="preserve"><value>Console</value></data>
+  <data name="ConsoleHint" xml:space="preserve"><value>GATT and serial channels: read, write, subscribe, send AT commands</value></data>
+  <data name="ConsoleDevice" xml:space="preserve"><value>Device</value></data>
+  <data name="ConsoleWaySerial" xml:space="preserve"><value>Serial (RFCOMM)</value></data>
+  <data name="ConsoleConnect" xml:space="preserve"><value>Connect</value></data>
+  <data name="ConsoleDisconnect" xml:space="preserve"><value>Disconnect</value></data>
+  <data name="ConsoleClosed" xml:space="preserve"><value>Disconnected</value></data>
+  <data name="ConsoleNotConnected" xml:space="preserve"><value>Not connected</value></data>
+  <data name="ConsoleConnecting" xml:space="preserve"><value>Connecting to {0}</value></data>
+  <data name="ConsoleTemplate" xml:space="preserve"><value>Ready command</value></data>
+  <data name="ConsoleTemplateNone" xml:space="preserve"><value>None</value></data>
+  <data name="ConsoleTemplateHint" xml:space="preserve"><value>Fields filled in. Press {0}</value></data>
+  <data name="ConsoleCharacteristics" xml:space="preserve"><value>Characteristics of the device</value></data>
+  <data name="ConsoleCharacteristicsEmpty" xml:space="preserve"><value>Listed after connecting</value></data>
+  <data name="ConsoleTarget" xml:space="preserve"><value>Characteristic or service</value></data>
+  <data name="ConsoleTargetGattHint" xml:space="preserve"><value>2A19 or a full UUID</value></data>
+  <data name="ConsoleTargetSerialHint" xml:space="preserve"><value>Service: 1101 for a serial port, or a full UUID</value></data>
+  <data name="ConsoleData" xml:space="preserve"><value>Data</value></data>
+  <data name="ConsoleDataHint" xml:space="preserve"><value>Text, or bytes such as 04 00 0F with Hex on</value></data>
+  <data name="ConsoleHex" xml:space="preserve"><value>Hex</value></data>
+  <data name="ConsoleEnding" xml:space="preserve"><value>Line ending</value></data>
+  <data name="ConsoleEndingNone" xml:space="preserve"><value>No ending</value></data>
+  <data name="ConsoleSend" xml:space="preserve"><value>Send</value></data>
+  <data name="ConsoleRead" xml:space="preserve"><value>Read</value></data>
+  <data name="ConsoleSubscribe" xml:space="preserve"><value>Subscribe</value></data>
+  <data name="ConsoleOutput" xml:space="preserve"><value>Exchange</value></data>
+  <data name="ConsoleCopy" xml:space="preserve"><value>Copy</value></data>
+  <data name="ConsoleClear" xml:space="preserve"><value>Clear</value></data>
+  <data name="ConsoleBadHex" xml:space="preserve"><value>Not hexadecimal: pairs of digits 0–9 and A–F</value></data>
+  <data name="ConsoleBadCharacteristic" xml:space="preserve"><value>Characteristic: four hex digits or a full UUID</value></data>
+  <data name="ConsoleBadService" xml:space="preserve"><value>Service: four hex digits or a full UUID</value></data>
+  <data name="ConsoleTplBattery" xml:space="preserve"><value>Battery level, 2A19</value></data>
+  <data name="ConsoleTplBatteryNotify" xml:space="preserve"><value>Battery level changes, 2A19</value></data>
+  <data name="ConsoleTplName" xml:space="preserve"><value>Device name, 2A00</value></data>
+  <data name="ConsoleTplMaker" xml:space="preserve"><value>Manufacturer, 2A29</value></data>
+  <data name="ConsoleTplModel" xml:space="preserve"><value>Model, 2A24</value></data>
+  <data name="ConsoleTplFirmware" xml:space="preserve"><value>Firmware, 2A26</value></data>
+  <data name="ConsoleTplSerial" xml:space="preserve"><value>Serial number, 2A25</value></data>
+  <data name="ConsoleTplHeartRate" xml:space="preserve"><value>Heart rate, 2A37</value></data>
+  <data name="ConsoleTplUartListen" xml:space="preserve"><value>Nordic UART: listen</value></data>
+  <data name="ConsoleTplUartBattery" xml:space="preserve"><value>Nordic UART: Battery; (Lovense)</value></data>
+  <data name="ConsoleTplAt" xml:space="preserve"><value>AT</value></data>
+  <data name="ConsoleTplAtVersion" xml:space="preserve"><value>AT+VERSION?</value></data>
+  <data name="ConsoleTplAtName" xml:space="preserve"><value>AT+NAME?</value></data>
+  <data name="ConsoleTplAtBattery" xml:space="preserve"><value>AT+CBC, battery</value></data>
+  <data name="ConsoleTplFastPairRing" xml:space="preserve"><value>Fast Pair: ring the earbuds</value></data>
 </root>

@@ -189,4 +189,54 @@
   <data name="SettingsAbout" xml:space="preserve"><value>О программе</value></data>
   <data name="AboutVersion" xml:space="preserve"><value>Версия {0}, ядро {1}</value></data>
   <data name="ToastLow" xml:space="preserve"><value>Низкий заряд: {0}</value></data>
+  <data name="SettingsDeveloper" xml:space="preserve"><value>Для разработчиков</value></data>
+  <data name="SettingDeveloper" xml:space="preserve"><value>Инструменты разработчика</value></data>
+  <data name="SettingDeveloperHint" xml:space="preserve"><value>Свои команды устройству. Неверная команда может изменить настройки устройства</value></data>
+  <data name="ConsoleOpen" xml:space="preserve"><value>Открыть</value></data>
+  <data name="ConsoleTitle" xml:space="preserve"><value>Консоль</value></data>
+  <data name="ConsoleHint" xml:space="preserve"><value>GATT и последовательные каналы: чтение, запись, подписка, AT-команды</value></data>
+  <data name="ConsoleDevice" xml:space="preserve"><value>Устройство</value></data>
+  <data name="ConsoleWaySerial" xml:space="preserve"><value>Порт (RFCOMM)</value></data>
+  <data name="ConsoleConnect" xml:space="preserve"><value>Подключить</value></data>
+  <data name="ConsoleDisconnect" xml:space="preserve"><value>Отключить</value></data>
+  <data name="ConsoleClosed" xml:space="preserve"><value>Отключено</value></data>
+  <data name="ConsoleNotConnected" xml:space="preserve"><value>Не подключено</value></data>
+  <data name="ConsoleConnecting" xml:space="preserve"><value>Подключение к {0}</value></data>
+  <data name="ConsoleTemplate" xml:space="preserve"><value>Готовая команда</value></data>
+  <data name="ConsoleTemplateNone" xml:space="preserve"><value>Нет</value></data>
+  <data name="ConsoleTemplateHint" xml:space="preserve"><value>Поля заполнены. Нажмите «{0}»</value></data>
+  <data name="ConsoleCharacteristics" xml:space="preserve"><value>Характеристики устройства</value></data>
+  <data name="ConsoleCharacteristicsEmpty" xml:space="preserve"><value>Появятся после подключения</value></data>
+  <data name="ConsoleTarget" xml:space="preserve"><value>Характеристика или служба</value></data>
+  <data name="ConsoleTargetGattHint" xml:space="preserve"><value>2A19 или полный UUID</value></data>
+  <data name="ConsoleTargetSerialHint" xml:space="preserve"><value>Служба: 1101 для последовательного порта или полный UUID</value></data>
+  <data name="ConsoleData" xml:space="preserve"><value>Данные</value></data>
+  <data name="ConsoleDataHint" xml:space="preserve"><value>Текст или байты вида 04 00 0F при включённом Hex</value></data>
+  <data name="ConsoleHex" xml:space="preserve"><value>Hex</value></data>
+  <data name="ConsoleEnding" xml:space="preserve"><value>Конец строки</value></data>
+  <data name="ConsoleEndingNone" xml:space="preserve"><value>Без конца строки</value></data>
+  <data name="ConsoleSend" xml:space="preserve"><value>Отправить</value></data>
+  <data name="ConsoleRead" xml:space="preserve"><value>Прочитать</value></data>
+  <data name="ConsoleSubscribe" xml:space="preserve"><value>Подписаться</value></data>
+  <data name="ConsoleOutput" xml:space="preserve"><value>Обмен</value></data>
+  <data name="ConsoleCopy" xml:space="preserve"><value>Копировать</value></data>
+  <data name="ConsoleClear" xml:space="preserve"><value>Очистить</value></data>
+  <data name="ConsoleBadHex" xml:space="preserve"><value>Не шестнадцатеричное число: нужны пары цифр 0–9 и A–F</value></data>
+  <data name="ConsoleBadCharacteristic" xml:space="preserve"><value>Характеристика: четыре шестнадцатеричные цифры или полный UUID</value></data>
+  <data name="ConsoleBadService" xml:space="preserve"><value>Служба: четыре шестнадцатеричные цифры или полный UUID</value></data>
+  <data name="ConsoleTplBattery" xml:space="preserve"><value>Уровень заряда, 2A19</value></data>
+  <data name="ConsoleTplBatteryNotify" xml:space="preserve"><value>Изменения заряда, 2A19</value></data>
+  <data name="ConsoleTplName" xml:space="preserve"><value>Имя устройства, 2A00</value></data>
+  <data name="ConsoleTplMaker" xml:space="preserve"><value>Производитель, 2A29</value></data>
+  <data name="ConsoleTplModel" xml:space="preserve"><value>Модель, 2A24</value></data>
+  <data name="ConsoleTplFirmware" xml:space="preserve"><value>Прошивка, 2A26</value></data>
+  <data name="ConsoleTplSerial" xml:space="preserve"><value>Серийный номер, 2A25</value></data>
+  <data name="ConsoleTplHeartRate" xml:space="preserve"><value>Пульс, 2A37</value></data>
+  <data name="ConsoleTplUartListen" xml:space="preserve"><value>Nordic UART: слушать</value></data>
+  <data name="ConsoleTplUartBattery" xml:space="preserve"><value>Nordic UART: Battery; (Lovense)</value></data>
+  <data name="ConsoleTplAt" xml:space="preserve"><value>AT</value></data>
+  <data name="ConsoleTplAtVersion" xml:space="preserve"><value>AT+VERSION?</value></data>
+  <data name="ConsoleTplAtName" xml:space="preserve"><value>AT+NAME?</value></data>
+  <data name="ConsoleTplAtBattery" xml:space="preserve"><value>AT+CBC, заряд</value></data>
+  <data name="ConsoleTplFastPairRing" xml:space="preserve"><value>Fast Pair: звук наушников</value></data>
 </root>

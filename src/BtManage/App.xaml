@@ -14,6 +14,9 @@
                  keeps the theme of the application; a style's theme resource follows the
                  theme of the element, which the settings can change while the application
                  runs (Appearance.ApplyWindow). -->
+            <Style x:Key="BtmWindowRootStyle" TargetType="Grid">
+                <Setter Property="Background" Value="{ThemeResource BtmWindowBackgroundBrush}" />
+            </Style>
             <Style x:Key="BtmPrimaryTextStyle" TargetType="TextBlock">
                 <Setter Property="Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
             </Style>

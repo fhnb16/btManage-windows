@@ -76,6 +76,9 @@ internal sealed class AppSettings
     /// <summary>The devices paired for sharing: their identifiers.</summary>
     public List<string> ShareTrusted { get; set; } = [];
 
+    /// <summary>Show the tools for developers: the console of raw traffic with a device.</summary>
+    public bool Developer { get; set; }
+
     /// <summary>Raised after <see cref="Save"/>.</summary>
     public event Action? Changed;
 

@@ -5,6 +5,7 @@
 - Sharing with other btManage (0.5.0, `Sharing.cs`, `Interop/ShareSession.cs`, the Share page, `MainWindow.Share.cs`): the firewall question at the first start, finding a phone on the same network, pairing by code both ways, text and files, the notification of an item received while the window is closed, the paired devices kept after a restart.
 - Adding a device (0.5.0, `Bluetooth/PairingSearch.cs`, `MainWindow.Pairing.cs`): headphones in pairing mode show up, pairing goes through, the code comparison of a device that shows one, an old headset that wants "0000".
 - The update button reads "Try again" after a failed check or installation, and does that.
+- The developer console (0.6.0, `ConsoleWindow.cs`, `Bluetooth/DeviceConsole.cs`), written without a build: GATT on a Bluetooth LE mouse (connect lists the characteristics, read 2A19, subscribe), a serial module on SPP with AT commands, the Fast Pair ring on Fast Pair earbuds. The window follows the theme and backdrop; the log stays scrolled to its end.
 
 - Connect and disconnect of audio devices (`Bluetooth/AudioConnection.cs`). Finding the audio filters is checked; sending the request is not.
 - Removing a pairing.
@@ -18,7 +19,7 @@
 ## Devices and data
 
 - Audio codec in use. Windows gives applications no way to ask; the only known route is tracing the Bluetooth audio driver, which needs administrator rights.
-- AirPods controls: noise control, conversation awareness, ear detection. These go over AAP on L2CAP, which Windows applications cannot open without a kernel driver. The packets themselves are in the core (`apple::aap`), as Android uses them.
+- AirPods controls: noise control, conversation awareness, ear detection, levels in steps of 1 %. These go over AAP on L2CAP, which Windows applications cannot open without a kernel driver. The packets themselves are in the core (`apple::aap`), as Android and Linux use them. The way to it: a KMDF Bluetooth profile driver (the shape of Microsoft's `bthecho` sample) that binds to the AirPods' AAP service entry, opens L2CAP PSM 0x1001 with BRBs and hands packets to the application through an IOCTL interface. It needs the WDK, and either Microsoft's attestation signing (an EV certificate and a Partner Center account) or test-signing mode on each computer.
 - Noise control of other makers' earbuds over RFCOMM, which Windows applications can open (`RfcommDeviceService`): Samsung Galaxy Buds, Sony, Soundcore, Nothing. Each protocol goes into the core, so Android uses the same code; each needs a pair of those earbuds to be tried on. Earbuds of the cheaper makers (HOCO and the like) have no public description of their protocol, and many have no way to switch noise control from a phone or computer at all.
 - Battery of Bluetooth Classic keyboards and mice that report it only in a HID report (generic battery strength usage).
 - Direct read of the GATT Battery Service for Bluetooth LE devices Windows does not keep a level for.

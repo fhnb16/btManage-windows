@@ -50,6 +50,7 @@ public sealed partial class MainWindow : Window
     private bool _busy;
     private bool _updating;
     private ToggleSwitch? _bluetoothSwitch;
+    private ConsoleWindow? _console;
 
     internal MainWindow(DeviceMonitor monitor, AppSettings settings, RadioControl radio, Updater updater, Sharing sharing)
     {
@@ -104,27 +105,7 @@ public sealed partial class MainWindow : Window
         ShowUpdateState();
     }
 
-    /// <summary>Gives the minimise, maximise and close buttons the colours of the content's theme.</summary>
-    private void ColorCaptionButtons()
-    {
-        var bar = AppWindow.TitleBar;
-        var dark = Root.ActualTheme == ElementTheme.Dark;
-        var text = dark ? Microsoft.UI.Colors.White : Microsoft.UI.Colors.Black;
-        bar.ButtonBackgroundColor = Microsoft.UI.Colors.Transparent;
-        bar.ButtonInactiveBackgroundColor = Microsoft.UI.Colors.Transparent;
-        bar.ButtonForegroundColor = text;
-        bar.ButtonHoverForegroundColor = text;
-        bar.ButtonPressedForegroundColor = text;
-        bar.ButtonInactiveForegroundColor = dark
-            ? Windows.UI.Color.FromArgb(0x87, 0xFF, 0xFF, 0xFF)
-            : Windows.UI.Color.FromArgb(0x72, 0x00, 0x00, 0x00);
-        bar.ButtonHoverBackgroundColor = dark
-            ? Windows.UI.Color.FromArgb(0x0F, 0xFF, 0xFF, 0xFF)
-            : Windows.UI.Color.FromArgb(0x09, 0x00, 0x00, 0x00);
-        bar.ButtonPressedBackgroundColor = dark
-            ? Windows.UI.Color.FromArgb(0x0A, 0xFF, 0xFF, 0xFF)
-            : Windows.UI.Color.FromArgb(0x06, 0x00, 0x00, 0x00);
-    }
+    private void ColorCaptionButtons() => Appearance.ColorCaptionButtons(AppWindow, Root.ActualTheme);
 
     /// <summary>An update has been staged; the application must exit for it to be applied.</summary>
     internal event Action? QuitRequested;
@@ -598,6 +579,16 @@ public sealed partial class MainWindow : Window
             Child = update,
         });
 
+        Section("SettingsDeveloper");
+        var openConsole = new Button { Content = Strings.Get("ConsoleOpen"), MinWidth = 112, IsEnabled = _settings.Developer };
+        openConsole.Click += (_, _) => OpenConsole();
+        Setting("SettingDeveloper", "SettingDeveloperHint", Switch(_settings.Developer, on =>
+        {
+            openConsole.IsEnabled = on;
+            Save(() => _settings.Developer = on);
+        }));
+        Setting("ConsoleTitle", "ConsoleHint", openConsole);
+
         Section("SettingsAbout");
         var version = Updater.CurrentVersion;
         SettingsPanel.Children.Add(new TextBlock
@@ -648,6 +639,19 @@ public sealed partial class MainWindow : Window
         var failed = _updater.State is UpdateState.CheckFailed or UpdateState.InstallFailed;
         _updateButton.Content = Strings.Get(failed ? "UpdateRetry" : installable ? "UpdateInstall" : "UpdateCheck");
         _updateButton.IsEnabled = _updater.State is not (UpdateState.Checking or UpdateState.Downloading);
+    }
+
+    /// <summary>Opens the developer console, or brings the one open to the front.</summary>
+    private void OpenConsole()
+    {
+        if (_console is null)
+        {
+            var console = new ConsoleWindow(_monitor, _settings);
+            console.Closed += (_, _) => _console = null;
+            _console = console;
+        }
+
+        _console.Activate();
     }
 
     private void SaveAndRestart(Action change)
