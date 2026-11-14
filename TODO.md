@@ -2,6 +2,9 @@
 
 ## Needs trying on real hardware
 
+- Sharing with other btManage (0.4.0, `Sharing.cs`, `Interop/ShareSession.cs`, the section in the settings): the firewall question at the first start, finding a phone on the same network, text and files both ways, the notification of an item received while the window is closed, the button that opens Downloads\btManage.
+- The update button reads "Try again" after a failed check or installation, and does that.
+
 - Connect and disconnect of audio devices (`Bluetooth/AudioConnection.cs`). Finding the audio filters is checked; sending the request is not.
 - Removing a pairing.
 - Fast Pair earbuds, Xbox controllers on Bluetooth Classic, DUALSHOCK 4 and DualSense.

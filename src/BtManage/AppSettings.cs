@@ -67,6 +67,12 @@ internal sealed class AppSettings
     /// <summary>Devices the user wants no notifications about.</summary>
     public HashSet<string> MutedDevices { get; set; } = [];
 
+    /// <summary>Take files and text other btManage applications on the local network send.</summary>
+    public bool ShareReceive { get; set; }
+
+    /// <summary>Identifier of this installation among the others on the network; made at the first start.</summary>
+    public string? ShareId { get; set; }
+
     /// <summary>Raised after <see cref="Save"/>.</summary>
     public event Action? Changed;
 

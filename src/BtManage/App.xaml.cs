@@ -19,6 +19,7 @@ public partial class App : Application
     private MainWindow? _main;
     private TrayIcon? _tray;
     private Notifier? _notifier;
+    private Sharing? _sharing;
     private readonly Updater _updater = new();
     private long _updateCheckedAt = Environment.TickCount64 - UpdateInterval + FirstUpdateCheckDelay;
 
@@ -61,6 +62,19 @@ public partial class App : Application
 
         _notifier = new Notifier(_settings);
         _notifier.Opened += device => _queue.TryEnqueue(() => ShowMain(device));
+
+        // Files and text from other devices with btManage on the same network.
+        _sharing = new Sharing(_queue, _settings);
+        _sharing.Received += item =>
+        {
+            var what = item.Kind == "text" ? (item.Text ?? string.Empty) : (item.Name ?? string.Empty);
+            if (what.Length > 80)
+            {
+                what = what[..80];
+            }
+
+            _notifier?.Announce(Strings.Get("AppName"), Strings.Format("ShareReceived", what, item.From ?? string.Empty), MainWindow.SettingsId);
+        };
         Program.ShowRequested += () => _queue.TryEnqueue(() => ShowMain(null));
 
         _tray = new TrayIcon(_flyout.Handle);
@@ -97,7 +111,7 @@ public partial class App : Application
     {
         if (_main is null)
         {
-            _main = new MainWindow(_monitor!, _settings, _radio!, _updater);
+            _main = new MainWindow(_monitor!, _settings, _radio!, _updater, _sharing!);
             _main.RestartRequested += Restart;
             _main.QuitRequested += Quit;
         }
@@ -148,6 +162,7 @@ public partial class App : Application
         _monitor?.Dispose();
         _tray?.Dispose();
         _notifier?.Dispose();
+        _sharing?.Dispose();
         Exit();
     }
 }

@@ -11,6 +11,7 @@ For Windows 10 and Windows 11.
 - **Control.** Connect and disconnect audio devices, remove a pairing, switch Bluetooth on and off.
 - **Notifications.** When your headphones connect or come near, and when a battery drops to the threshold. Clicking one opens the window on that device.
 - **Remembered levels.** A level that is no longer reported, such as the case with both earbuds out, stays on screen with its age.
+- **Sharing with other btManage** on the same network, Android and Linux included (Settings, Sharing with other devices): the devices find each other, text and files go both ways, received files land in Downloads\btManage. Windows asks once whether btManage may take connections from the network. Items come in only while taking is switched on; nothing is encrypted yet.
 - **Settings.** Design (Fluent, or Material with surfaces tinted with the accent and rounder corners), theme, accent colour (the system's or Bluetooth blue), window backdrop (Acrylic, Mica, Mica Alt or solid, in either design), language (English, Russian), start with Windows, updates. All but the language apply at once.
 - **Updates.** Checks the GitHub releases of this repository once a day and installs a newer one in place, after checking the download against the SHA-256 GitHub reports.
 

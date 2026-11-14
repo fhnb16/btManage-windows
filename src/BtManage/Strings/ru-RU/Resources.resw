@@ -85,6 +85,23 @@
   <data name="SourceHid" xml:space="preserve"><value>HID-отчёт</value></data>
   <data name="SourceGamepad" xml:space="preserve"><value>Интерфейс игровых контроллеров</value></data>
   <data name="SourceAap" xml:space="preserve"><value>Протокол аксессуаров</value></data>
+  <data name="UpdateRetry" xml:space="preserve"><value>Повторить</value></data>
+  <data name="SettingsSharing" xml:space="preserve"><value>Обмен с другими устройствами</value></data>
+  <data name="ShareReceive" xml:space="preserve"><value>Принимать файлы и текст от других устройств</value></data>
+  <data name="ShareReceiveHint" xml:space="preserve"><value>Телефоны и компьютеры с btManage в той же сети. Шифрования пока нет: включайте только в сети, которой доверяете. Файлы сохраняются в «Загрузки\btManage»</value></data>
+  <data name="SharePeers" xml:space="preserve"><value>Устройства в сети</value></data>
+  <data name="ShareNoPeers" xml:space="preserve"><value>Других btManage пока не слышно</value></data>
+  <data name="ShareAddress" xml:space="preserve"><value>Адрес в виде ip:порт</value></data>
+  <data name="ShareText" xml:space="preserve"><value>Текст</value></data>
+  <data name="ShareSendText" xml:space="preserve"><value>Отправить текст</value></data>
+  <data name="ShareSendFile" xml:space="preserve"><value>Отправить файл</value></data>
+  <data name="ShareOpenFolder" xml:space="preserve"><value>Полученные файлы</value></data>
+  <data name="ShareNotRunning" xml:space="preserve"><value>Обмен не запустился: нет сети или нет библиотеки ядра</value></data>
+  <data name="ShareThisDevice" xml:space="preserve"><value>Этот компьютер: {0}, адрес {1}</value></data>
+  <data name="ShareKindText" xml:space="preserve"><value>Текст</value></data>
+  <data name="ShareReceived" xml:space="preserve"><value>{0} от {1}</value></data>
+  <data name="ShareSent" xml:space="preserve"><value>{0} для {1}</value></data>
+  <data name="ShareFailed" xml:space="preserve"><value>Не отправлено, {0}: {1}</value></data>
   <data name="InfoLastConnected" xml:space="preserve"><value>Последнее подключение</value></data>
   <data name="DeviceNotifications" xml:space="preserve"><value>Уведомления об этом устройстве</value></data>
   <data name="RemoveDialogTitle" xml:space="preserve"><value>Удалить {0}?</value></data>

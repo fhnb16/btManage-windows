@@ -28,7 +28,12 @@ public sealed partial class MainWindow : Window
     private readonly AppSettings _settings;
     private readonly RadioControl _radio;
     private readonly Updater _updater;
+    private readonly Sharing _sharing;
     private readonly nint _handle;
+    private ComboBox? _sharePeers;
+    private TextBox? _shareTarget;
+    private TextBlock? _shareAddresses;
+    private StackPanel? _shareHistory;
     private TextBlock? _updateStatus;
     private Button? _updateButton;
     private HyperlinkButton? _updatePage;
@@ -42,12 +47,13 @@ public sealed partial class MainWindow : Window
     private bool _updating;
     private ToggleSwitch? _bluetoothSwitch;
 
-    internal MainWindow(DeviceMonitor monitor, AppSettings settings, RadioControl radio, Updater updater)
+    internal MainWindow(DeviceMonitor monitor, AppSettings settings, RadioControl radio, Updater updater, Sharing sharing)
     {
         _monitor = monitor;
         _settings = settings;
         _radio = radio;
         _updater = updater;
+        _sharing = sharing;
         InitializeComponent();
         _handle = WinRT.Interop.WindowNative.GetWindowHandle(this);
 
@@ -560,6 +566,9 @@ public sealed partial class MainWindow : Window
             Child = update,
         });
 
+        Section("SettingsSharing");
+        BuildSharing();
+
         Section("SettingsAbout");
         var version = Updater.CurrentVersion;
         SettingsPanel.Children.Add(new TextBlock
@@ -569,9 +578,148 @@ public sealed partial class MainWindow : Window
         });
     }
 
+    /// <summary>
+    /// Files and text to and from other devices with btManage on the same network: whether
+    /// this computer takes them, where to send, what to send, and what came and went.
+    /// </summary>
+    private void BuildSharing()
+    {
+        Setting("ShareReceive", "ShareReceiveHint", Switch(_settings.ShareReceive, on => Save(() => _settings.ShareReceive = on)));
+
+        var panel = new StackPanel { Spacing = 8 };
+        _shareAddresses = new TextBlock { TextWrapping = TextWrapping.Wrap, Style = Appearance.Style("BtmSecondaryTextStyle") };
+        panel.Children.Add(_shareAddresses);
+
+        var target = new TextBox { Header = Strings.Get("ShareAddress"), PlaceholderText = "192.168.1.20:50000" };
+        var message = new TextBox { Header = Strings.Get("ShareText"), AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 64 };
+        var peers = new ComboBox { PlaceholderText = Strings.Get("SharePeers"), HorizontalAlignment = HorizontalAlignment.Stretch };
+        peers.SelectionChanged += (_, _) =>
+        {
+            if (peers.SelectedItem is ComboBoxItem { Tag: string address })
+            {
+                target.Text = address;
+            }
+        };
+        _sharePeers = peers;
+        _shareTarget = target;
+        panel.Children.Add(peers);
+        panel.Children.Add(target);
+        panel.Children.Add(message);
+
+        var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+        var sendText = new Button { Content = Strings.Get("ShareSendText"), Style = (Style)Application.Current.Resources["AccentButtonStyle"] };
+        sendText.Click += (_, _) =>
+        {
+            if (target.Text.Trim().Length > 0 && message.Text.Length > 0)
+            {
+                _sharing.SendText(target.Text, message.Text);
+                message.Text = string.Empty;
+            }
+        };
+        var sendFile = new Button { Content = Strings.Get("ShareSendFile") };
+        sendFile.Click += OnShareFileClick;
+        var openFolder = new Button { Content = Strings.Get("ShareOpenFolder") };
+        openFolder.Click += (_, _) =>
+        {
+            Directory.CreateDirectory(Sharing.Inbox);
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{Sharing.Inbox}\"") { UseShellExecute = true });
+        };
+        buttons.Children.Add(sendText);
+        buttons.Children.Add(sendFile);
+        buttons.Children.Add(openFolder);
+        panel.Children.Add(buttons);
+
+        _shareHistory = new StackPanel { Spacing = 4 };
+        panel.Children.Add(_shareHistory);
+
+        SettingsPanel.Children.Add(new Border
+        {
+            Style = (Style)Root.Resources["Card"],
+            Padding = new Thickness(16, 12, 16, 12),
+            Child = panel,
+        });
+
+        _sharing.Changed += ShowSharing;
+        ShowSharing();
+    }
+
+    private async void OnShareFileClick(object sender, RoutedEventArgs e)
+    {
+        var target = _shareTarget?.Text.Trim() ?? string.Empty;
+        if (target.Length == 0)
+        {
+            return;
+        }
+
+        var picker = new Windows.Storage.Pickers.FileOpenPicker();
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, _handle);
+        picker.FileTypeFilter.Add("*");
+        var file = await picker.PickSingleFileAsync();
+        if (file is not null)
+        {
+            _sharing.SendFile(target, file.Path);
+        }
+    }
+
+    /// <summary>Brings the peers, the addresses and the history up to date.</summary>
+    private void ShowSharing()
+    {
+        if (_sharePeers is null || _shareAddresses is null || _shareHistory is null)
+        {
+            return;
+        }
+
+        var addresses = _sharing.Addresses();
+        _shareAddresses.Text = !_sharing.Running
+            ? Strings.Get("ShareNotRunning")
+            : Strings.Format("ShareThisDevice", _sharing.Name, addresses.Count > 0 ? string.Join(", ", addresses) : "—");
+
+        // Rebuilt only when the peers changed, so that an open drop-down is not disturbed.
+        var peers = _sharing.Peers;
+        var shown = _sharePeers.Items.OfType<ComboBoxItem>().Select(item => item.Tag as string).ToList();
+        if (!shown.SequenceEqual(peers.Select(peer => peer.Address)))
+        {
+            _sharePeers.Items.Clear();
+            foreach (var peer in peers)
+            {
+                _sharePeers.Items.Add(new ComboBoxItem { Content = $"{peer.Name} · {peer.Platform} · {peer.Address}", Tag = peer.Address });
+            }
+
+            _sharePeers.PlaceholderText = Strings.Get(peers.Count > 0 ? "SharePeers" : "ShareNoPeers");
+        }
+
+        _shareHistory.Children.Clear();
+        foreach (var item in _sharing.History.Take(20))
+        {
+            var what = item.Kind == "text" ? Strings.Get("ShareKindText") : item.Name ?? string.Empty;
+            var line = item.Type switch
+            {
+                "received" => Strings.Format("ShareReceived", what, item.From ?? string.Empty),
+                "sent" => Strings.Format("ShareSent", what, item.To ?? string.Empty),
+                _ => Strings.Format("ShareFailed", what.Length > 0 ? what : item.To ?? string.Empty, item.Error ?? string.Empty),
+            };
+            var row = new StackPanel { Spacing = 2 };
+            row.Children.Add(new TextBlock { Text = line, TextWrapping = TextWrapping.Wrap });
+            if (item.Text is { Length: > 0 } text)
+            {
+                row.Children.Add(new TextBlock
+                {
+                    Text = text,
+                    TextWrapping = TextWrapping.Wrap,
+                    IsTextSelectionEnabled = true,
+                    Style = Appearance.Style("BtmSecondaryTextStyle"),
+                });
+            }
+
+            _shareHistory.Children.Add(row);
+        }
+    }
+
     private async void OnUpdateClick(object sender, RoutedEventArgs e)
     {
-        if (_updater.State == UpdateState.Available && _updater.Available?.Asset is not null)
+        // After a failed installation the same button tries the installation again.
+        var install = _updater.State is UpdateState.Available or UpdateState.InstallFailed;
+        if (install && _updater.Available?.Asset is not null)
         {
             if (await _updater.InstallAsync())
             {
@@ -605,7 +753,8 @@ public sealed partial class MainWindow : Window
         };
         _updatePage.Visibility = VisibleIf(release is not null);
         var installable = _updater.State == UpdateState.Available && release?.Asset is not null;
-        _updateButton.Content = Strings.Get(installable ? "UpdateInstall" : "UpdateCheck");
+        var failed = _updater.State is UpdateState.CheckFailed or UpdateState.InstallFailed;
+        _updateButton.Content = Strings.Get(failed ? "UpdateRetry" : installable ? "UpdateInstall" : "UpdateCheck");
         _updateButton.IsEnabled = _updater.State is not (UpdateState.Checking or UpdateState.Downloading);
     }
 
