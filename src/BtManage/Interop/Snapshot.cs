@@ -145,4 +145,5 @@ internal sealed record SystemDeviceInfo
 [JsonSerializable(typeof(IReadOnlyList<SystemDeviceInfo>))]
 [JsonSerializable(typeof(IReadOnlyList<SharePeer>))]
 [JsonSerializable(typeof(IReadOnlyList<ShareEvent>))]
+[JsonSerializable(typeof(IReadOnlyList<string>))]
 internal sealed partial class CoreJson : JsonSerializerContext;

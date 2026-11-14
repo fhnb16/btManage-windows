@@ -73,6 +73,9 @@ internal sealed class AppSettings
     /// <summary>Identifier of this installation among the others on the network; made at the first start.</summary>
     public string? ShareId { get; set; }
 
+    /// <summary>The devices paired for sharing: their identifiers.</summary>
+    public List<string> ShareTrusted { get; set; } = [];
+
     /// <summary>Raised after <see cref="Save"/>.</summary>
     public event Action? Changed;
 

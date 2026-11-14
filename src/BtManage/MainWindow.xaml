@@ -140,6 +140,9 @@
                         <!-- Settings; the rows are built in code -->
                         <StackPanel x:Name="SettingsPanel" Spacing="4" Visibility="Collapsed" />
 
+                        <!-- Sharing with other devices; built in code (MainWindow.Share.cs) -->
+                        <StackPanel x:Name="SharePanel" Spacing="12" Visibility="Collapsed" />
+
                         <!-- No device to show -->
                         <StackPanel x:Name="PlaceholderPanel" Spacing="4" Visibility="Collapsed">
                             <TextBlock x:Name="PlaceholderTitle" Style="{StaticResource BodyStrongTextBlockStyle}" />

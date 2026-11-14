@@ -21,6 +21,14 @@ namespace BtManage;
 public sealed partial class MainWindow : Window
 {
     internal const string SettingsId = "settings";
+
+    /// <summary>The page of sharing with other devices, in the list under the devices.</summary>
+    internal const string ShareId = "share";
+
+    private const string AddDeviceId = "add-device";
+
+    /// <summary>Whether an identifier is one of the pages under the devices rather than a device.</summary>
+    private static bool IsPage(string? id) => id is SettingsId or ShareId;
     private static readonly SizeInt32 DefaultSize = new(980, 680);
     private static readonly int[] Thresholds = [10, 15, 20, 25, 30];
 
@@ -30,10 +38,6 @@ public sealed partial class MainWindow : Window
     private readonly Updater _updater;
     private readonly Sharing _sharing;
     private readonly nint _handle;
-    private ComboBox? _sharePeers;
-    private TextBox? _shareTarget;
-    private TextBlock? _shareAddresses;
-    private StackPanel? _shareHistory;
     private TextBlock? _updateStatus;
     private Button? _updateButton;
     private HyperlinkButton? _updatePage;
@@ -86,8 +90,13 @@ public sealed partial class MainWindow : Window
         WindowsSettingsItem.Text = Strings.Get("BluetoothSettings");
         RemoveItem.Text = Strings.Get("RemoveDevice");
         ToolTipService.SetToolTip(MoreButton, Strings.Get("More"));
+        // Share comes first in the list under the devices, settings last.
+        FooterList.Items.Add(Row("", Strings.Get("SharePage"), ShareId));
         FooterList.Items.Add(Row("", Strings.Get("Settings"), SettingsId));
+        // Not a page: opens the search for a device to pair with.
+        FooterList.Items.Add(Row("", Strings.Get("AddDevice"), AddDeviceId));
         BuildSettings();
+        BuildSharePage();
 
         _monitor.Changed += Refresh;
         _radio.Changed += UpdateBluetoothSwitch;
@@ -154,14 +163,14 @@ public sealed partial class MainWindow : Window
         var devices = _monitor.Current.Devices;
         var threshold = _settings.LowThreshold;
 
-        if (_wantedId is not null && (_wantedId == SettingsId || devices.Any(device => device.Id == _wantedId)))
+        if (_wantedId is not null && (IsPage(_wantedId) || devices.Any(device => device.Id == _wantedId)))
         {
             _selectedId = _wantedId;
             _wantedId = null;
         }
 
         // Keep the selection on a device that still exists; otherwise take the first.
-        if (_selectedId != SettingsId && devices.All(device => device.Id != _selectedId))
+        if (!IsPage(_selectedId) && devices.All(device => device.Id != _selectedId))
         {
             _selectedId = devices.FirstOrDefault()?.Id;
         }
@@ -197,9 +206,17 @@ public sealed partial class MainWindow : Window
             }
         }
 
-        FooterList.SelectedIndex = _selectedId == SettingsId ? 0 : -1;
+        FooterList.SelectedIndex = FooterIndex(_selectedId);
         _updating = false;
     }
+
+    /// <summary>The place of a page in the list under the devices, or -1 for a device.</summary>
+    private static int FooterIndex(string? id) => id switch
+    {
+        ShareId => 0,
+        SettingsId => 1,
+        _ => -1,
+    };
 
     /// <summary>A quiet caption over a group of devices. It cannot be selected.</summary>
     private static ListViewItem GroupHeader(string text) => new()
@@ -234,9 +251,19 @@ public sealed partial class MainWindow : Window
 
     private void OnFooterSelected(object sender, SelectionChangedEventArgs e)
     {
-        if (!_updating && FooterList.SelectedIndex == 0)
+        if (!_updating && (FooterList.SelectedItem as FrameworkElement)?.Tag as string == AddDeviceId)
         {
-            _selectedId = SettingsId;
+            // The row starts the search and leaves the selection where it was.
+            _updating = true;
+            FooterList.SelectedIndex = FooterIndex(_selectedId);
+            _updating = false;
+            _ = AddDeviceAsync();
+            return;
+        }
+
+        if (!_updating && FooterList.SelectedIndex >= 0)
+        {
+            _selectedId = FooterList.SelectedIndex == 0 ? ShareId : SettingsId;
             _updating = true;
             DeviceList.SelectedItem = null;
             _updating = false;
@@ -246,10 +273,11 @@ public sealed partial class MainWindow : Window
 
     private void ShowSelection()
     {
-        var device = _selectedId is null or SettingsId ? null : _monitor.Find(_selectedId);
+        var device = _selectedId is null || IsPage(_selectedId) ? null : _monitor.Find(_selectedId);
         DevicePanel.Visibility = VisibleIf(device is not null);
         SettingsPanel.Visibility = VisibleIf(_selectedId == SettingsId);
-        PlaceholderPanel.Visibility = VisibleIf(device is null && _selectedId != SettingsId);
+        SharePanel.Visibility = VisibleIf(_selectedId == ShareId);
+        PlaceholderPanel.Visibility = VisibleIf(device is null && !IsPage(_selectedId));
         if (device is not null)
         {
             ShowDevice(device);
@@ -257,6 +285,10 @@ public sealed partial class MainWindow : Window
         else if (_selectedId == SettingsId)
         {
             UpdateBluetoothSwitch();
+        }
+        else if (_selectedId == ShareId)
+        {
+            ShowSharePage();
         }
         else
         {
@@ -446,7 +478,7 @@ public sealed partial class MainWindow : Window
 
     private void OnForgetClick(object sender, RoutedEventArgs e)
     {
-        if (_selectedId is not null and not SettingsId)
+        if (_selectedId is not null && !IsPage(_selectedId))
         {
             _monitor.Forget(_selectedId);
         }
@@ -456,7 +488,7 @@ public sealed partial class MainWindow : Window
 
     private void OnNotifyToggled(object sender, RoutedEventArgs e)
     {
-        if (_updating || _selectedId is null or SettingsId)
+        if (_updating || _selectedId is null || IsPage(_selectedId))
         {
             return;
         }
@@ -566,9 +598,6 @@ public sealed partial class MainWindow : Window
             Child = update,
         });
 
-        Section("SettingsSharing");
-        BuildSharing();
-
         Section("SettingsAbout");
         var version = Updater.CurrentVersion;
         SettingsPanel.Children.Add(new TextBlock
@@ -576,143 +605,6 @@ public sealed partial class MainWindow : Window
             Text = Strings.Format("AboutVersion", version, Interop.Hub.CoreVersion),
             Style = Appearance.Style("BtmSecondaryTextStyle"),
         });
-    }
-
-    /// <summary>
-    /// Files and text to and from other devices with btManage on the same network: whether
-    /// this computer takes them, where to send, what to send, and what came and went.
-    /// </summary>
-    private void BuildSharing()
-    {
-        Setting("ShareReceive", "ShareReceiveHint", Switch(_settings.ShareReceive, on => Save(() => _settings.ShareReceive = on)));
-
-        var panel = new StackPanel { Spacing = 8 };
-        _shareAddresses = new TextBlock { TextWrapping = TextWrapping.Wrap, Style = Appearance.Style("BtmSecondaryTextStyle") };
-        panel.Children.Add(_shareAddresses);
-
-        var target = new TextBox { Header = Strings.Get("ShareAddress"), PlaceholderText = "192.168.1.20:50000" };
-        var message = new TextBox { Header = Strings.Get("ShareText"), AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 64 };
-        var peers = new ComboBox { PlaceholderText = Strings.Get("SharePeers"), HorizontalAlignment = HorizontalAlignment.Stretch };
-        peers.SelectionChanged += (_, _) =>
-        {
-            if (peers.SelectedItem is ComboBoxItem { Tag: string address })
-            {
-                target.Text = address;
-            }
-        };
-        _sharePeers = peers;
-        _shareTarget = target;
-        panel.Children.Add(peers);
-        panel.Children.Add(target);
-        panel.Children.Add(message);
-
-        var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
-        var sendText = new Button { Content = Strings.Get("ShareSendText"), Style = (Style)Application.Current.Resources["AccentButtonStyle"] };
-        sendText.Click += (_, _) =>
-        {
-            if (target.Text.Trim().Length > 0 && message.Text.Length > 0)
-            {
-                _sharing.SendText(target.Text, message.Text);
-                message.Text = string.Empty;
-            }
-        };
-        var sendFile = new Button { Content = Strings.Get("ShareSendFile") };
-        sendFile.Click += OnShareFileClick;
-        var openFolder = new Button { Content = Strings.Get("ShareOpenFolder") };
-        openFolder.Click += (_, _) =>
-        {
-            Directory.CreateDirectory(Sharing.Inbox);
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{Sharing.Inbox}\"") { UseShellExecute = true });
-        };
-        buttons.Children.Add(sendText);
-        buttons.Children.Add(sendFile);
-        buttons.Children.Add(openFolder);
-        panel.Children.Add(buttons);
-
-        _shareHistory = new StackPanel { Spacing = 4 };
-        panel.Children.Add(_shareHistory);
-
-        SettingsPanel.Children.Add(new Border
-        {
-            Style = (Style)Root.Resources["Card"],
-            Padding = new Thickness(16, 12, 16, 12),
-            Child = panel,
-        });
-
-        _sharing.Changed += ShowSharing;
-        ShowSharing();
-    }
-
-    private async void OnShareFileClick(object sender, RoutedEventArgs e)
-    {
-        var target = _shareTarget?.Text.Trim() ?? string.Empty;
-        if (target.Length == 0)
-        {
-            return;
-        }
-
-        var picker = new Windows.Storage.Pickers.FileOpenPicker();
-        WinRT.Interop.InitializeWithWindow.Initialize(picker, _handle);
-        picker.FileTypeFilter.Add("*");
-        var file = await picker.PickSingleFileAsync();
-        if (file is not null)
-        {
-            _sharing.SendFile(target, file.Path);
-        }
-    }
-
-    /// <summary>Brings the peers, the addresses and the history up to date.</summary>
-    private void ShowSharing()
-    {
-        if (_sharePeers is null || _shareAddresses is null || _shareHistory is null)
-        {
-            return;
-        }
-
-        var addresses = _sharing.Addresses();
-        _shareAddresses.Text = !_sharing.Running
-            ? Strings.Get("ShareNotRunning")
-            : Strings.Format("ShareThisDevice", _sharing.Name, addresses.Count > 0 ? string.Join(", ", addresses) : "—");
-
-        // Rebuilt only when the peers changed, so that an open drop-down is not disturbed.
-        var peers = _sharing.Peers;
-        var shown = _sharePeers.Items.OfType<ComboBoxItem>().Select(item => item.Tag as string).ToList();
-        if (!shown.SequenceEqual(peers.Select(peer => peer.Address)))
-        {
-            _sharePeers.Items.Clear();
-            foreach (var peer in peers)
-            {
-                _sharePeers.Items.Add(new ComboBoxItem { Content = $"{peer.Name} · {peer.Platform} · {peer.Address}", Tag = peer.Address });
-            }
-
-            _sharePeers.PlaceholderText = Strings.Get(peers.Count > 0 ? "SharePeers" : "ShareNoPeers");
-        }
-
-        _shareHistory.Children.Clear();
-        foreach (var item in _sharing.History.Take(20))
-        {
-            var what = item.Kind == "text" ? Strings.Get("ShareKindText") : item.Name ?? string.Empty;
-            var line = item.Type switch
-            {
-                "received" => Strings.Format("ShareReceived", what, item.From ?? string.Empty),
-                "sent" => Strings.Format("ShareSent", what, item.To ?? string.Empty),
-                _ => Strings.Format("ShareFailed", what.Length > 0 ? what : item.To ?? string.Empty, item.Error ?? string.Empty),
-            };
-            var row = new StackPanel { Spacing = 2 };
-            row.Children.Add(new TextBlock { Text = line, TextWrapping = TextWrapping.Wrap });
-            if (item.Text is { Length: > 0 } text)
-            {
-                row.Children.Add(new TextBlock
-                {
-                    Text = text,
-                    TextWrapping = TextWrapping.Wrap,
-                    IsTextSelectionEnabled = true,
-                    Style = Appearance.Style("BtmSecondaryTextStyle"),
-                });
-            }
-
-            _shareHistory.Children.Add(row);
-        }
     }
 
     private async void OnUpdateClick(object sender, RoutedEventArgs e)

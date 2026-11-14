@@ -87,7 +87,43 @@
   <data name="SourceAap" xml:space="preserve"><value>Accessory protocol</value></data>
   <data name="UpdateRetry" xml:space="preserve"><value>Try again</value></data>
   <data name="SettingsSharing" xml:space="preserve"><value>Sharing with other devices</value></data>
-  <data name="ShareReceive" xml:space="preserve"><value>Take files and text from other devices</value></data>
+  <data name="ShareReceive" xml:space="preserve"><value>Take files and text from paired devices</value></data>
+  <data name="SharePage" xml:space="preserve"><value>Share</value></data>
+  <data name="AddDevice" xml:space="preserve"><value>Add a device</value></data>
+  <data name="AddDeviceHint" xml:space="preserve"><value>Put the device into pairing mode and keep it near. Devices ready to pair show up here</value></data>
+  <data name="AddDevicePair" xml:space="preserve"><value>Pair</value></data>
+  <data name="AddDeviceDone" xml:space="preserve"><value>{0} is paired</value></data>
+  <data name="AddDeviceFailed" xml:space="preserve"><value>{0} was not paired</value></data>
+  <data name="AddDeviceFailedHint" xml:space="preserve"><value>Windows answered: {0}. Put the device into pairing mode again and retry, or use Windows Settings</value></data>
+  <data name="AddDeviceCode" xml:space="preserve"><value>Compare the codes</value></data>
+  <data name="AddDeviceCodeHint" xml:space="preserve"><value>Does the device show {0}?</value></data>
+  <data name="AddDeviceCodeMatches" xml:space="preserve"><value>It matches</value></data>
+  <data name="ShareThisComputer" xml:space="preserve"><value>This computer</value></data>
+  <data name="ShareVisible" xml:space="preserve"><value>Other devices with btManage on this network see it as {0}. Its address: {1}</value></data>
+  <data name="ShareCode" xml:space="preserve"><value>Pairing code</value></data>
+  <data name="ShareCodeHint" xml:space="preserve"><value>Type it in on the other device to pair the two. Paired devices send to each other; others cannot. Nothing is encrypted yet</value></data>
+  <data name="ShareByAddress" xml:space="preserve"><value>Enter an address</value></data>
+  <data name="ShareTypedAddress" xml:space="preserve"><value>Address entered by hand</value></data>
+  <data name="SharePaired" xml:space="preserve"><value>paired</value></data>
+  <data name="ShareNotPaired" xml:space="preserve"><value>not paired</value></data>
+  <data name="SharePair" xml:space="preserve"><value>Pair</value></data>
+  <data name="ShareKindFile" xml:space="preserve"><value>File</value></data>
+  <data name="ShareForget" xml:space="preserve"><value>Unpair</value></data>
+  <data name="ShareHistory" xml:space="preserve"><value>Recent</value></data>
+  <data name="ShareNothingYet" xml:space="preserve"><value>Nothing sent or received yet</value></data>
+  <data name="ShareFrom" xml:space="preserve"><value>From {0}</value></data>
+  <data name="ShareTo" xml:space="preserve"><value>To {0}</value></data>
+  <data name="SharePairedWith" xml:space="preserve"><value>Paired with {0}</value></data>
+  <data name="ShareNotSent" xml:space="preserve"><value>Not sent to {0}</value></data>
+  <data name="ShareNeedsPairing" xml:space="preserve"><value>The other device does not know this one yet. Pair them first</value></data>
+  <data name="ShareCopy" xml:space="preserve"><value>Copy</value></data>
+  <data name="ShareOpen" xml:space="preserve"><value>Open</value></data>
+  <data name="ShareShowInFolder" xml:space="preserve"><value>Show in folder</value></data>
+  <data name="SharePairWith" xml:space="preserve"><value>Pair with {0}</value></data>
+  <data name="SharePairHint" xml:space="preserve"><value>Enter the six digits shown on {0}, under Share</value></data>
+  <data name="ShareTextTo" xml:space="preserve"><value>Text to {0}</value></data>
+  <data name="ShareSend" xml:space="preserve"><value>Send</value></data>
+  <data name="ShareAdd" xml:space="preserve"><value>Add</value></data>
   <data name="ShareReceiveHint" xml:space="preserve"><value>Phones and computers with btManage on the same network. Nothing is encrypted yet: switch this on only on a network you trust. Files go to Downloads\btManage</value></data>
   <data name="SharePeers" xml:space="preserve"><value>Devices on the network</value></data>
   <data name="ShareNoPeers" xml:space="preserve"><value>No other btManage heard yet</value></data>

@@ -73,7 +73,7 @@ public partial class App : Application
                 what = what[..80];
             }
 
-            _notifier?.Announce(Strings.Get("AppName"), Strings.Format("ShareReceived", what, item.From ?? string.Empty), MainWindow.SettingsId);
+            _notifier?.Announce(Strings.Get("AppName"), Strings.Format("ShareReceived", what, item.From ?? string.Empty), MainWindow.ShareId);
         };
         Program.ShowRequested += () => _queue.TryEnqueue(() => ShowMain(null));
 

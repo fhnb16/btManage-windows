@@ -3,12 +3,12 @@ using System.Text.Json;
 
 namespace BtManage.Interop;
 
-/// <summary>Another btManage on the local network.</summary>
-internal sealed record SharePeer(string Id, string Name, string Platform, string Address);
+/// <summary>Another btManage on the local network. <see cref="Trusted"/>: paired, items go both ways.</summary>
+internal sealed record SharePeer(string Id, string Name, string Platform, string Address, bool Trusted);
 
 /// <summary>
-/// Something that happened in the sharing: an item received, sent, or failed. Which fields
-/// are set depends on <see cref="Type"/>.
+/// Something that happened in the sharing: an item received, sent, or failed, or a pairing.
+/// Which fields are set depends on <see cref="Type"/>: "received", "sent", "failed", "paired".
 /// </summary>
 internal sealed record ShareEvent(
     string Type,
@@ -19,7 +19,13 @@ internal sealed record ShareEvent(
     long Size,
     string? Path,
     string? Text,
-    string? Error);
+    string? Error,
+    bool NeedsPairing,
+    string? Id)
+{
+    /// <summary>When it happened, set when it is taken from the core.</summary>
+    public DateTimeOffset At { get; init; } = DateTimeOffset.Now;
+}
 
 /// <summary>
 /// Files and text between btManage applications on one local network, through the core
@@ -70,6 +76,32 @@ internal sealed partial class ShareSession : SafeHandle
 
     /// <param name="to">The address of the other side, "ip:port".</param>
     public void SendFile(string to, string path) => Use(session => btm_share_send_file(session, to, path) ? 1 : 0);
+
+    /// <summary>The code another device types in to pair with this one, six digits.</summary>
+    public string Code => Take(Use(btm_share_code)) ?? string.Empty;
+
+    /// <summary>The identifiers of the paired devices, to keep for the next start.</summary>
+    public IReadOnlyList<string> Trusted()
+    {
+        var json = Take(Use(btm_share_trusted));
+        return json is null ? [] : JsonSerializer.Deserialize(json, CoreJson.Default.IReadOnlyListString) ?? [];
+    }
+
+    /// <summary>Restores a paired device kept from an earlier run.</summary>
+    public void Trust(string id) => Use(session =>
+    {
+        btm_share_trust(session, id);
+        return 0;
+    });
+
+    public void Forget(string id) => Use(session =>
+    {
+        btm_share_forget(session, id);
+        return 0;
+    });
+
+    /// <summary>Asks the device at <paramref name="to"/> to pair, with the code shown on it.</summary>
+    public void Pair(string to, string code) => Use(session => btm_share_pair(session, to, code) ? 1 : 0);
 
     protected override bool ReleaseHandle()
     {
@@ -142,4 +174,20 @@ internal sealed partial class ShareSession : SafeHandle
     [LibraryImport(Library, StringMarshalling = StringMarshalling.Utf8)]
     [return: MarshalAs(UnmanagedType.U1)]
     private static partial bool btm_share_send_file(nint session, string to, string path);
+
+    [LibraryImport(Library)]
+    private static partial nint btm_share_code(nint session);
+
+    [LibraryImport(Library)]
+    private static partial nint btm_share_trusted(nint session);
+
+    [LibraryImport(Library, StringMarshalling = StringMarshalling.Utf8)]
+    private static partial void btm_share_trust(nint session, string id);
+
+    [LibraryImport(Library, StringMarshalling = StringMarshalling.Utf8)]
+    private static partial void btm_share_forget(nint session, string id);
+
+    [LibraryImport(Library, StringMarshalling = StringMarshalling.Utf8)]
+    [return: MarshalAs(UnmanagedType.U1)]
+    private static partial bool btm_share_pair(nint session, string to, string code);
 }

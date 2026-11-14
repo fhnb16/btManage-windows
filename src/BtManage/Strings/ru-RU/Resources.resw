@@ -87,7 +87,43 @@
   <data name="SourceAap" xml:space="preserve"><value>Протокол аксессуаров</value></data>
   <data name="UpdateRetry" xml:space="preserve"><value>Повторить</value></data>
   <data name="SettingsSharing" xml:space="preserve"><value>Обмен с другими устройствами</value></data>
-  <data name="ShareReceive" xml:space="preserve"><value>Принимать файлы и текст от других устройств</value></data>
+  <data name="ShareReceive" xml:space="preserve"><value>Принимать файлы и текст от связанных устройств</value></data>
+  <data name="SharePage" xml:space="preserve"><value>Обмен</value></data>
+  <data name="AddDevice" xml:space="preserve"><value>Добавить устройство</value></data>
+  <data name="AddDeviceHint" xml:space="preserve"><value>Переведите устройство в режим сопряжения и держите его рядом. Готовые к сопряжению устройства появятся здесь</value></data>
+  <data name="AddDevicePair" xml:space="preserve"><value>Связать</value></data>
+  <data name="AddDeviceDone" xml:space="preserve"><value>{0} сопряжено</value></data>
+  <data name="AddDeviceFailed" xml:space="preserve"><value>{0} не удалось сопрячь</value></data>
+  <data name="AddDeviceFailedHint" xml:space="preserve"><value>Ответ Windows: {0}. Снова переведите устройство в режим сопряжения и повторите или воспользуйтесь параметрами Windows</value></data>
+  <data name="AddDeviceCode" xml:space="preserve"><value>Сверьте коды</value></data>
+  <data name="AddDeviceCodeHint" xml:space="preserve"><value>Устройство показывает {0}?</value></data>
+  <data name="AddDeviceCodeMatches" xml:space="preserve"><value>Совпадает</value></data>
+  <data name="ShareThisComputer" xml:space="preserve"><value>Этот компьютер</value></data>
+  <data name="ShareVisible" xml:space="preserve"><value>Другие устройства с btManage в этой сети видят его как {0}. Его адрес: {1}</value></data>
+  <data name="ShareCode" xml:space="preserve"><value>Код сопряжения</value></data>
+  <data name="ShareCodeHint" xml:space="preserve"><value>Введите его на другом устройстве, чтобы связать их. Связанные устройства могут отправлять друг другу, остальные нет. Шифрования пока нет</value></data>
+  <data name="ShareByAddress" xml:space="preserve"><value>Ввести адрес</value></data>
+  <data name="ShareTypedAddress" xml:space="preserve"><value>Адрес, введённый вручную</value></data>
+  <data name="SharePaired" xml:space="preserve"><value>связано</value></data>
+  <data name="ShareNotPaired" xml:space="preserve"><value>не связано</value></data>
+  <data name="SharePair" xml:space="preserve"><value>Связать</value></data>
+  <data name="ShareKindFile" xml:space="preserve"><value>Файл</value></data>
+  <data name="ShareForget" xml:space="preserve"><value>Отвязать</value></data>
+  <data name="ShareHistory" xml:space="preserve"><value>Недавние</value></data>
+  <data name="ShareNothingYet" xml:space="preserve"><value>Пока ничего не отправлено и не получено</value></data>
+  <data name="ShareFrom" xml:space="preserve"><value>От {0}</value></data>
+  <data name="ShareTo" xml:space="preserve"><value>Для {0}</value></data>
+  <data name="SharePairedWith" xml:space="preserve"><value>Связано с {0}</value></data>
+  <data name="ShareNotSent" xml:space="preserve"><value>Не отправлено на {0}</value></data>
+  <data name="ShareNeedsPairing" xml:space="preserve"><value>Другое устройство пока не знает этот компьютер. Сначала свяжите их</value></data>
+  <data name="ShareCopy" xml:space="preserve"><value>Копировать</value></data>
+  <data name="ShareOpen" xml:space="preserve"><value>Открыть</value></data>
+  <data name="ShareShowInFolder" xml:space="preserve"><value>Показать в папке</value></data>
+  <data name="SharePairWith" xml:space="preserve"><value>Связать с {0}</value></data>
+  <data name="SharePairHint" xml:space="preserve"><value>Введите шесть цифр, которые показаны на {0} в разделе «Обмен»</value></data>
+  <data name="ShareTextTo" xml:space="preserve"><value>Текст для {0}</value></data>
+  <data name="ShareSend" xml:space="preserve"><value>Отправить</value></data>
+  <data name="ShareAdd" xml:space="preserve"><value>Добавить</value></data>
   <data name="ShareReceiveHint" xml:space="preserve"><value>Телефоны и компьютеры с btManage в той же сети. Шифрования пока нет: включайте только в сети, которой доверяете. Файлы сохраняются в «Загрузки\btManage»</value></data>
   <data name="SharePeers" xml:space="preserve"><value>Устройства в сети</value></data>
   <data name="ShareNoPeers" xml:space="preserve"><value>Других btManage пока не слышно</value></data>

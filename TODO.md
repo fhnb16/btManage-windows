@@ -2,7 +2,8 @@
 
 ## Needs trying on real hardware
 
-- Sharing with other btManage (0.4.0, `Sharing.cs`, `Interop/ShareSession.cs`, the section in the settings): the firewall question at the first start, finding a phone on the same network, text and files both ways, the notification of an item received while the window is closed, the button that opens Downloads\btManage.
+- Sharing with other btManage (0.5.0, `Sharing.cs`, `Interop/ShareSession.cs`, the Share page, `MainWindow.Share.cs`): the firewall question at the first start, finding a phone on the same network, pairing by code both ways, text and files, the notification of an item received while the window is closed, the paired devices kept after a restart.
+- Adding a device (0.5.0, `Bluetooth/PairingSearch.cs`, `MainWindow.Pairing.cs`): headphones in pairing mode show up, pairing goes through, the code comparison of a device that shows one, an old headset that wants "0000".
 - The update button reads "Try again" after a failed check or installation, and does that.
 
 - Connect and disconnect of audio devices (`Bluetooth/AudioConnection.cs`). Finding the audio filters is checked; sending the request is not.
@@ -30,7 +31,6 @@
 - Tray menu in the dark theme. The Win32 menu follows the light theme only.
 - Battery level in the tray icon itself, for a device of the user's choice.
 - The language without a restart.
-- Pair a new device from the window instead of sending the user to Windows Settings.
 - Set a device as the default audio output.
 - Second language pass by a native English speaker.
 

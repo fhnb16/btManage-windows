@@ -8,8 +8,8 @@ namespace BtManage;
 
 /// <summary>
 /// Files and text between this computer and other devices with btManage on the same
-/// network. Items received land in Downloads\btManage. Runs from the start of the
-/// application; the user decides whether items are taken.
+/// network. Items come only from paired devices, and only while the user lets them; they
+/// land in Downloads\btManage. The paired devices are kept in the settings.
 /// </summary>
 internal sealed class Sharing : IDisposable
 {
@@ -31,11 +31,20 @@ internal sealed class Sharing : IDisposable
             _settings.ShareId ??= Guid.NewGuid().ToString();
             _settings.Save();
             _session = ShareSession.Start(_settings.ShareId, Name, Inbox);
-            _session?.SetReceiving(_settings.ShareReceive);
+            if (_session is { } session)
+            {
+                foreach (var id in _settings.ShareTrusted)
+                {
+                    session.Trust(id);
+                }
+
+                session.SetReceiving(_settings.ShareReceive);
+                Code = session.Code;
+            }
         }
         catch (Exception exception) when (exception is DllNotFoundException or EntryPointNotFoundException)
         {
-            // A core library older than the sharing: the section says sharing is not running.
+            // A core library older than the sharing: the page says sharing is not running.
             _session = null;
         }
 
@@ -51,13 +60,16 @@ internal sealed class Sharing : IDisposable
 
     public bool Running => _session is not null;
 
+    /// <summary>The code another device types in to pair with this one; it changes after too many wrong tries.</summary>
+    public string Code { get; private set; } = string.Empty;
+
     /// <summary>The other devices heard recently.</summary>
     public IReadOnlyList<SharePeer> Peers { get; private set; } = [];
 
     /// <summary>What was sent and received, newest first.</summary>
     public IReadOnlyList<ShareEvent> History => _history;
 
-    /// <summary>Raised on the UI thread when the peers or the history changed.</summary>
+    /// <summary>Raised on the UI thread when the peers, the code or the history changed.</summary>
     public event Action? Changed;
 
     /// <summary>Raised on the UI thread for each item that came in.</summary>
@@ -93,6 +105,16 @@ internal sealed class Sharing : IDisposable
 
     public void SendFile(string to, string path) => _session?.SendFile(to.Trim(), path);
 
+    public void Pair(string to, string code) => _session?.Pair(to.Trim(), code);
+
+    /// <summary>Stops taking items from a device, until it is paired again.</summary>
+    public void Forget(string id)
+    {
+        _session?.Forget(id);
+        KeepTrusted();
+        Poll();
+    }
+
     private void Poll()
     {
         if (_session is not { } session)
@@ -101,9 +123,11 @@ internal sealed class Sharing : IDisposable
         }
 
         var peers = session.Peers();
+        var code = session.Code;
         var events = session.Events();
-        var changed = !peers.SequenceEqual(Peers) || events.Count > 0;
+        var changed = !peers.SequenceEqual(Peers) || code != Code || events.Count > 0;
         Peers = peers;
+        Code = code;
         foreach (var item in events)
         {
             _history.Insert(0, item);
@@ -111,6 +135,11 @@ internal sealed class Sharing : IDisposable
             {
                 Received?.Invoke(item);
             }
+        }
+
+        if (events.Any(item => item.Type == "paired"))
+        {
+            KeepTrusted();
         }
 
         if (_history.Count > MaxHistory)
@@ -121,6 +150,16 @@ internal sealed class Sharing : IDisposable
         if (changed)
         {
             Changed?.Invoke();
+        }
+    }
+
+    /// <summary>Writes the paired devices into the settings, for the next start.</summary>
+    private void KeepTrusted()
+    {
+        if (_session is { } session)
+        {
+            _settings.ShareTrusted = [.. session.Trusted()];
+            _settings.Save();
         }
     }
 
